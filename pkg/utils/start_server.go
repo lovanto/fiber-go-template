@@ -8,17 +8,14 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// StartServerWithGracefulShutdown function for starting server with a graceful shutdown.
 func StartServerWithGracefulShutdown(a *fiber.App) {
-	// Create channel for idle connections.
 	idleConnsClosed := make(chan struct{})
 
 	go func() {
 		sigint := make(chan os.Signal, 1)
-		signal.Notify(sigint, os.Interrupt) // Catch OS signals.
+		signal.Notify(sigint, os.Interrupt)
 		<-sigint
 
-		// Received an interrupt signal, shutdown.
 		if err := a.Shutdown(); err != nil {
 			log.Printf("Oops... Server is not shutting down! Reason: %v", err)
 		}
@@ -26,10 +23,8 @@ func StartServerWithGracefulShutdown(a *fiber.App) {
 		close(idleConnsClosed)
 	}()
 
-	// Build Fiber connection URL.
 	fiberConnURL, _ := ConnectionURLBuilder("fiber")
 
-	// Run server.
 	if err := a.Listen(fiberConnURL); err != nil {
 		log.Printf("Oops... Server is not running! Reason: %v", err)
 	}
@@ -37,12 +32,8 @@ func StartServerWithGracefulShutdown(a *fiber.App) {
 	<-idleConnsClosed
 }
 
-// StartServer func for starting a simple server.
 func StartServer(a *fiber.App) {
-	// Build Fiber connection URL.
 	fiberConnURL, _ := ConnectionURLBuilder("fiber")
-
-	// Run server.
 	if err := a.Listen(fiberConnURL); err != nil {
 		log.Printf("Oops... Server is not running! Reason: %v", err)
 	}

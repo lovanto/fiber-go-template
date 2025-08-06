@@ -320,29 +320,20 @@ const docTemplate = `{
                 "summary": "auth user and return access and refresh token",
                 "parameters": [
                     {
-                        "description": "User Email",
-                        "name": "email",
+                        "description": "Sign In Request",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "description": "User Password",
-                        "name": "password",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/models.SignIn"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "ok",
+                        "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/controllers.SignInResponse"
                         }
                     }
                 }
@@ -430,6 +421,35 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "controllers.SignInResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "msg": {
+                    "type": "string",
+                    "example": "Sign in successful"
+                },
+                "tokens": {
+                    "$ref": "#/definitions/controllers.TokenResponse"
+                }
+            }
+        },
+        "controllers.TokenResponse": {
+            "type": "object",
+            "properties": {
+                "access": {
+                    "type": "string",
+                    "example": "access-token"
+                },
+                "refresh": {
+                    "type": "string",
+                    "example": "refresh-token"
+                }
+            }
+        },
         "models.Book": {
             "type": "object",
             "required": [
@@ -482,6 +502,23 @@ const docTemplate = `{
                     "type": "integer",
                     "maximum": 10,
                     "minimum": 1
+                }
+            }
+        },
+        "models.SignIn": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 255
                 }
             }
         },

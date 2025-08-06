@@ -9,21 +9,18 @@ import (
 	"github.com/google/uuid"
 )
 
-// TokenMetadata struct to describe metadata in JWT.
 type TokenMetadata struct {
 	UserID      uuid.UUID
 	Credentials map[string]bool
 	Expires     int64
 }
 
-// ExtractTokenMetadata func to extract metadata from JWT.
 func ExtractTokenMetadata(c *fiber.Ctx) (*TokenMetadata, error) {
 	token, err := verifyToken(c)
 	if err != nil {
 		return nil, err
 	}
 
-	// Setting and checking token and credentials.
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if ok && token.Valid {
 		userID, err := uuid.Parse(claims["id"].(string))
@@ -31,10 +28,8 @@ func ExtractTokenMetadata(c *fiber.Ctx) (*TokenMetadata, error) {
 			return nil, err
 		}
 
-		// Expires time.
 		expires := int64(claims["exp"].(float64))
 
-		// User credentials.
 		credentials := map[string]bool{
 			"book:create": claims["book:create"].(bool),
 			"book:update": claims["book:update"].(bool),
@@ -54,7 +49,6 @@ func ExtractTokenMetadata(c *fiber.Ctx) (*TokenMetadata, error) {
 func extractToken(c *fiber.Ctx) string {
 	bearToken := c.Get("Authorization")
 
-	// Normally Authorization HTTP header.
 	onlyToken := strings.Split(bearToken, " ")
 	if len(onlyToken) == 2 {
 		return onlyToken[1]

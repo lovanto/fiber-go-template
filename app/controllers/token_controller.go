@@ -23,10 +23,8 @@ import (
 // @Security ApiKeyAuth
 // @Router /v1/token/renew [post]
 func RenewTokens(c *fiber.Ctx) error {
-	// Get now time.
 	now := time.Now().Unix()
 
-	// Get claims from JWT.
 	claims, err := utils.ExtractTokenMetadata(c)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -35,10 +33,7 @@ func RenewTokens(c *fiber.Ctx) error {
 		})
 	}
 
-	// Set expiration time from JWT data of current user.
 	expiresAccessToken := claims.Expires
-
-	// Checking, if now time greather than Access token expiration time.
 	if now > expiresAccessToken {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": true,
@@ -46,10 +41,7 @@ func RenewTokens(c *fiber.Ctx) error {
 		})
 	}
 
-	// Create a new renew refresh token struct.
 	renew := &models.Renew{}
-
-	// Checking received data from JSON body.
 	if err := c.BodyParser(renew); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": true,
@@ -57,7 +49,6 @@ func RenewTokens(c *fiber.Ctx) error {
 		})
 	}
 
-	// Set expiration time from Refresh token of current user.
 	expiresRefreshToken, err := utils.ParseRefreshToken(renew.RefreshToken)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -66,12 +57,8 @@ func RenewTokens(c *fiber.Ctx) error {
 		})
 	}
 
-	// Checking, if now time greather than Refresh token expiration time.
 	if now < expiresRefreshToken {
-		// Define user ID.
 		userID := claims.UserID
-
-		// Create database connection.
 		db, err := database.OpenDBConnection()
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -80,7 +67,6 @@ func RenewTokens(c *fiber.Ctx) error {
 			})
 		}
 
-		// Get user by ID.
 		foundedUser, err := db.GetUserByID(userID)
 		if err != nil {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -89,7 +75,6 @@ func RenewTokens(c *fiber.Ctx) error {
 			})
 		}
 
-		// Get role credentials from founded user.
 		credentials, err := utils.GetCredentialsByRole(foundedUser.UserRole)
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -98,7 +83,6 @@ func RenewTokens(c *fiber.Ctx) error {
 			})
 		}
 
-		// Generate JWT Access & Refresh tokens.
 		tokens, err := utils.GenerateNewTokens(userID.String(), credentials)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -107,7 +91,6 @@ func RenewTokens(c *fiber.Ctx) error {
 			})
 		}
 
-		// Create a new Redis connection.
 		connRedis, err := cache.RedisConnection()
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -116,7 +99,6 @@ func RenewTokens(c *fiber.Ctx) error {
 			})
 		}
 
-		// Save refresh token to Redis.
 		errRedis := connRedis.Set(context.Background(), userID.String(), tokens.Refresh, 0).Err()
 		if errRedis != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{

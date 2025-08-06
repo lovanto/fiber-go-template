@@ -1,9 +1,9 @@
-.PHONY: clean critic security lint test build run
+.PHONY: clean critic security lint test swag build run
 
 APP_NAME = apiserver
 BUILD_DIR = $(PWD)/build
 MIGRATIONS_FOLDER = $(PWD)/platform/migrations
-DATABASE_URL = postgres://postgres:password@localhost:5432/postgres?sslmode=disable
+DATABASE_URL = postgres://postgres:BIU34uU6K2J7ADndaljwd@localhost:5432/codebase?sslmode=disable
 
 clean:
 	rm -rf ./build
@@ -24,7 +24,7 @@ test: clean critic security lint
 build: test
 	CGO_ENABLED=0 go build -ldflags="-w -s" -o $(BUILD_DIR)/$(APP_NAME) main.go
 
-run: swag build
+run: build
 	$(BUILD_DIR)/$(APP_NAME)
 
 migrate.up:
@@ -57,8 +57,8 @@ docker.postgres:
 		--name cgapp-postgres \
 		--network dev-network \
 		-e POSTGRES_USER=postgres \
-		-e POSTGRES_PASSWORD=password \
-		-e POSTGRES_DB=postgres \
+		-e POSTGRES_PASSWORD=BIU34uU6K2J7ADndaljwd \
+		-e POSTGRES_DB=codebase \
 		-v ${HOME}/dev-postgres/data/:/var/lib/postgresql/data \
 		-p 5432:5432 \
 		postgres

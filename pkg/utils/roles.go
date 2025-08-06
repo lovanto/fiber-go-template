@@ -6,14 +6,10 @@ import (
 	"github.com/create-go-app/fiber-go-template/pkg/repository"
 )
 
-// VerifyRole func for verifying a given role.
 func VerifyRole(role string) (string, error) {
-	// Switch given role.
 	switch role {
 	case repository.AdminRoleName:
-		// Nothing to do, verified successfully.
 	case repository.ModeratorRoleName:
-		// Nothing to do, verified successfully.
 	case repository.UserRoleName:
 		// Nothing to do, verified successfully.
 	default:

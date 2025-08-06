@@ -6,7 +6,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// User struct to describe User object.
 type User struct {
 	ID           uuid.UUID `db:"id" json:"id" validate:"required,uuid"`
 	CreatedAt    time.Time `db:"created_at" json:"created_at"`

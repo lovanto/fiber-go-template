@@ -1,5 +1,25 @@
 basePath: /api
 definitions:
+  controllers.SignInResponse:
+    properties:
+      error:
+        example: false
+        type: boolean
+      msg:
+        example: Sign in successful
+        type: string
+      tokens:
+        $ref: '#/definitions/controllers.TokenResponse'
+    type: object
+  controllers.TokenResponse:
+    properties:
+      access:
+        example: access-token
+        type: string
+      refresh:
+        example: refresh-token
+        type: string
+    type: object
   models.Book:
     properties:
       author:
@@ -38,6 +58,18 @@ definitions:
         maximum: 10
         minimum: 1
         type: integer
+    type: object
+  models.SignIn:
+    properties:
+      email:
+        maxLength: 255
+        type: string
+      password:
+        maxLength: 255
+        type: string
+    required:
+    - email
+    - password
     type: object
   models.User:
     properties:
@@ -263,25 +295,19 @@ paths:
       - application/json
       description: Auth user and return access and refresh token.
       parameters:
-      - description: User Email
+      - description: Sign In Request
         in: body
-        name: email
+        name: request
         required: true
         schema:
-          type: string
-      - description: User Password
-        in: body
-        name: password
-        required: true
-        schema:
-          type: string
+          $ref: '#/definitions/models.SignIn'
       produces:
       - application/json
       responses:
         "200":
-          description: ok
+          description: OK
           schema:
-            type: string
+            $ref: '#/definitions/controllers.SignInResponse'
       summary: auth user and return access and refresh token
       tags:
       - User
