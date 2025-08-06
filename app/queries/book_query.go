@@ -22,7 +22,6 @@ func (q *BookQueries) GetBooks() ([]models.Book, error) {
 	// Send query to database.
 	err := q.Select(&books, query)
 	if err != nil {
-		// Return empty object and error.
 		return books, err
 	}
 
@@ -41,7 +40,6 @@ func (q *BookQueries) GetBooksByAuthor(author string) ([]models.Book, error) {
 	// Send query to database.
 	err := q.Get(&books, query, author)
 	if err != nil {
-		// Return empty object and error.
 		return books, err
 	}
 
@@ -60,7 +58,6 @@ func (q *BookQueries) GetBook(id uuid.UUID) (models.Book, error) {
 	// Send query to database.
 	err := q.Get(&book, query, id)
 	if err != nil {
-		// Return empty object and error.
 		return book, err
 	}
 
@@ -76,7 +73,6 @@ func (q *BookQueries) CreateBook(b *models.Book) error {
 	// Send query to database.
 	_, err := q.Exec(query, b.ID, b.CreatedAt, b.UpdatedAt, b.UserID, b.Title, b.Author, b.BookStatus, b.BookAttrs)
 	if err != nil {
-		// Return only error.
 		return err
 	}
 
@@ -92,7 +88,6 @@ func (q *BookQueries) UpdateBook(id uuid.UUID, b *models.Book) error {
 	// Send query to database.
 	_, err := q.Exec(query, id, b.UpdatedAt, b.Title, b.Author, b.BookStatus, b.BookAttrs)
 	if err != nil {
-		// Return only error.
 		return err
 	}
 
@@ -108,7 +103,6 @@ func (q *BookQueries) DeleteBook(id uuid.UUID) error {
 	// Send query to database.
 	_, err := q.Exec(query, id)
 	if err != nil {
-		// Return only error.
 		return err
 	}
 

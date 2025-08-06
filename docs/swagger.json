@@ -435,7 +435,8 @@
             ],
             "properties": {
                 "author": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 255
                 },
                 "book_attrs": {
                     "$ref": "#/definitions/models.BookAttrs"
@@ -450,7 +451,8 @@
                     "type": "string"
                 },
                 "title": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 255
                 },
                 "updated_at": {
                     "type": "string"
@@ -470,7 +472,9 @@
                     "type": "string"
                 },
                 "rating": {
-                    "type": "integer"
+                    "type": "integer",
+                    "maximum": 10,
+                    "minimum": 1
                 }
             }
         },
@@ -488,19 +492,22 @@
                     "type": "string"
                 },
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 255
                 },
                 "id": {
                     "type": "string"
                 },
                 "password_hash": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 255
                 },
                 "updated_at": {
                     "type": "string"
                 },
                 "user_role": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 25
                 },
                 "user_status": {
                     "type": "integer"

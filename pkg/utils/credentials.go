@@ -32,7 +32,6 @@ func GetCredentialsByRole(role string) ([]string, error) {
 			repository.BookCreateCredential,
 		}
 	default:
-		// Return error message.
 		return nil, fmt.Errorf("role '%v' does not exist", role)
 	}
 

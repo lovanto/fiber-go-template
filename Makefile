@@ -3,7 +3,7 @@
 APP_NAME = apiserver
 BUILD_DIR = $(PWD)/build
 MIGRATIONS_FOLDER = $(PWD)/platform/migrations
-DATABASE_URL = postgres://postgres:password@cgapp-postgres/postgres?sslmode=disable
+DATABASE_URL = postgres://postgres:password@localhost:5432/postgres?sslmode=disable
 
 clean:
 	rm -rf ./build

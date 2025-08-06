@@ -17,7 +17,6 @@ func VerifyRole(role string) (string, error) {
 	case repository.UserRoleName:
 		// Nothing to do, verified successfully.
 	default:
-		// Return error message.
 		return "", fmt.Errorf("role '%v' does not exist", role)
 	}
 

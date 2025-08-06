@@ -22,7 +22,6 @@ func (q *UserQueries) GetUserByID(id uuid.UUID) (models.User, error) {
 	// Send query to database.
 	err := q.Get(&user, query, id)
 	if err != nil {
-		// Return empty object and error.
 		return user, err
 	}
 
@@ -41,7 +40,6 @@ func (q *UserQueries) GetUserByEmail(email string) (models.User, error) {
 	// Send query to database.
 	err := q.Get(&user, query, email)
 	if err != nil {
-		// Return empty object and error.
 		return user, err
 	}
 
@@ -60,7 +58,6 @@ func (q *UserQueries) CreateUser(u *models.User) error {
 		u.ID, u.CreatedAt, u.UpdatedAt, u.Email, u.PasswordHash, u.UserStatus, u.UserRole,
 	)
 	if err != nil {
-		// Return only error.
 		return err
 	}
 

@@ -23,14 +23,12 @@ func GenerateNewTokens(id string, credentials []string) (*Tokens, error) {
 	// Generate JWT Access token.
 	accessToken, err := generateNewAccessToken(id, credentials)
 	if err != nil {
-		// Return token generation error.
 		return nil, err
 	}
 
 	// Generate JWT Refresh token.
 	refreshToken, err := generateNewRefreshToken()
 	if err != nil {
-		// Return token generation error.
 		return nil, err
 	}
 
@@ -68,7 +66,6 @@ func generateNewAccessToken(id string, credentials []string) (string, error) {
 	// Generate token.
 	t, err := token.SignedString([]byte(secret))
 	if err != nil {
-		// Return error, it JWT token generation failed.
 		return "", err
 	}
 
@@ -85,7 +82,6 @@ func generateNewRefreshToken() (string, error) {
 	// See: https://pkg.go.dev/io#Writer.Write
 	_, err := hash.Write([]byte(refresh))
 	if err != nil {
-		// Return error, it refresh token generation failed.
 		return "", err
 	}
 

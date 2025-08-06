@@ -23,7 +23,6 @@ func GetBooks(c *fiber.Ctx) error {
 	// Create database connection.
 	db, err := database.OpenDBConnection()
 	if err != nil {
-		// Return status 500 and database connection error.
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": true,
 			"msg":   err.Error(),
@@ -33,7 +32,6 @@ func GetBooks(c *fiber.Ctx) error {
 	// Get all books.
 	books, err := db.GetBooks()
 	if err != nil {
-		// Return, if books not found.
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": true,
 			"msg":   "books were not found",
@@ -73,7 +71,6 @@ func GetBook(c *fiber.Ctx) error {
 	// Create database connection.
 	db, err := database.OpenDBConnection()
 	if err != nil {
-		// Return status 500 and database connection error.
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": true,
 			"msg":   err.Error(),
@@ -83,7 +80,6 @@ func GetBook(c *fiber.Ctx) error {
 	// Get book by ID.
 	book, err := db.GetBook(id)
 	if err != nil {
-		// Return, if book not found.
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": true,
 			"msg":   "book with the given ID is not found",
@@ -119,7 +115,6 @@ func CreateBook(c *fiber.Ctx) error {
 	// Get claims from JWT.
 	claims, err := utils.ExtractTokenMetadata(c)
 	if err != nil {
-		// Return status 500 and JWT parse error.
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": true,
 			"msg":   err.Error(),
@@ -131,7 +126,6 @@ func CreateBook(c *fiber.Ctx) error {
 
 	// Checking, if now time greather than expiration from JWT.
 	if now > expires {
-		// Return status 401 and unauthorized error message.
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": true,
 			"msg":   "unauthorized, check expiration time of your token",
@@ -143,7 +137,6 @@ func CreateBook(c *fiber.Ctx) error {
 
 	// Only user with `book:create` credential can create a new book.
 	if !credential {
-		// Return status 403 and permission denied error message.
 		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
 			"error": true,
 			"msg":   "permission denied, check credentials of your token",
@@ -155,7 +148,6 @@ func CreateBook(c *fiber.Ctx) error {
 
 	// Check, if received JSON data is valid.
 	if err := c.BodyParser(book); err != nil {
-		// Return status 400 and error message.
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": true,
 			"msg":   err.Error(),
@@ -165,7 +157,6 @@ func CreateBook(c *fiber.Ctx) error {
 	// Create database connection.
 	db, err := database.OpenDBConnection()
 	if err != nil {
-		// Return status 500 and database connection error.
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": true,
 			"msg":   err.Error(),
@@ -183,7 +174,6 @@ func CreateBook(c *fiber.Ctx) error {
 
 	// Validate book fields.
 	if err := validate.Struct(book); err != nil {
-		// Return, if some fields are not valid.
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": true,
 			"msg":   utils.ValidatorErrors(err),
@@ -192,7 +182,6 @@ func CreateBook(c *fiber.Ctx) error {
 
 	// Create book by given model.
 	if err := db.CreateBook(book); err != nil {
-		// Return status 500 and error message.
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": true,
 			"msg":   err.Error(),
@@ -229,7 +218,6 @@ func UpdateBook(c *fiber.Ctx) error {
 	// Get claims from JWT.
 	claims, err := utils.ExtractTokenMetadata(c)
 	if err != nil {
-		// Return status 500 and JWT parse error.
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": true,
 			"msg":   err.Error(),
@@ -241,7 +229,6 @@ func UpdateBook(c *fiber.Ctx) error {
 
 	// Checking, if now time greather than expiration from JWT.
 	if now > expires {
-		// Return status 401 and unauthorized error message.
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": true,
 			"msg":   "unauthorized, check expiration time of your token",
@@ -253,7 +240,6 @@ func UpdateBook(c *fiber.Ctx) error {
 
 	// Only book creator with `book:update` credential can update his book.
 	if !credential {
-		// Return status 403 and permission denied error message.
 		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
 			"error": true,
 			"msg":   "permission denied, check credentials of your token",
@@ -265,7 +251,6 @@ func UpdateBook(c *fiber.Ctx) error {
 
 	// Check, if received JSON data is valid.
 	if err := c.BodyParser(book); err != nil {
-		// Return status 400 and error message.
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": true,
 			"msg":   err.Error(),
@@ -275,7 +260,6 @@ func UpdateBook(c *fiber.Ctx) error {
 	// Create database connection.
 	db, err := database.OpenDBConnection()
 	if err != nil {
-		// Return status 500 and database connection error.
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": true,
 			"msg":   err.Error(),
@@ -285,7 +269,6 @@ func UpdateBook(c *fiber.Ctx) error {
 	// Checking, if book with given ID is exists.
 	foundedBook, err := db.GetBook(book.ID)
 	if err != nil {
-		// Return status 404 and book not found error.
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": true,
 			"msg":   "book with this ID not found",
@@ -297,15 +280,9 @@ func UpdateBook(c *fiber.Ctx) error {
 
 	// Only the creator can delete his book.
 	if foundedBook.UserID == userID {
-		// Set initialized default data for book:
 		book.UpdatedAt = time.Now()
-
-		// Create a new validator for a Book model.
 		validate := utils.NewValidator()
-
-		// Validate book fields.
 		if err := validate.Struct(book); err != nil {
-			// Return, if some fields are not valid.
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"error": true,
 				"msg":   utils.ValidatorErrors(err),
@@ -314,20 +291,17 @@ func UpdateBook(c *fiber.Ctx) error {
 
 		// Update book by given ID.
 		if err := db.UpdateBook(foundedBook.ID, book); err != nil {
-			// Return status 500 and error message.
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": true,
 				"msg":   err.Error(),
 			})
 		}
 
-		// Return status 201.
 		return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 			"error": false,
 			"msg":   nil,
 		})
 	} else {
-		// Return status 403 and permission denied error message.
 		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
 			"error": true,
 			"msg":   "permission denied, only the creator can delete his book",
@@ -352,7 +326,6 @@ func DeleteBook(c *fiber.Ctx) error {
 	// Get claims from JWT.
 	claims, err := utils.ExtractTokenMetadata(c)
 	if err != nil {
-		// Return status 500 and JWT parse error.
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": true,
 			"msg":   err.Error(),
@@ -364,7 +337,6 @@ func DeleteBook(c *fiber.Ctx) error {
 
 	// Checking, if now time greather than expiration from JWT.
 	if now > expires {
-		// Return status 401 and unauthorized error message.
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": true,
 			"msg":   "unauthorized, check expiration time of your token",
@@ -376,7 +348,6 @@ func DeleteBook(c *fiber.Ctx) error {
 
 	// Only book creator with `book:delete` credential can delete his book.
 	if !credential {
-		// Return status 403 and permission denied error message.
 		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
 			"error": true,
 			"msg":   "permission denied, check credentials of your token",
@@ -388,7 +359,6 @@ func DeleteBook(c *fiber.Ctx) error {
 
 	// Check, if received JSON data is valid.
 	if err := c.BodyParser(book); err != nil {
-		// Return status 400 and error message.
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": true,
 			"msg":   err.Error(),
@@ -400,7 +370,6 @@ func DeleteBook(c *fiber.Ctx) error {
 
 	// Validate book fields.
 	if err := validate.StructPartial(book, "id"); err != nil {
-		// Return, if some fields are not valid.
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": true,
 			"msg":   utils.ValidatorErrors(err),
@@ -410,7 +379,6 @@ func DeleteBook(c *fiber.Ctx) error {
 	// Create database connection.
 	db, err := database.OpenDBConnection()
 	if err != nil {
-		// Return status 500 and database connection error.
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": true,
 			"msg":   err.Error(),
@@ -420,7 +388,6 @@ func DeleteBook(c *fiber.Ctx) error {
 	// Checking, if book with given ID is exists.
 	foundedBook, err := db.GetBook(book.ID)
 	if err != nil {
-		// Return status 404 and book not found error.
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": true,
 			"msg":   "book with this ID not found",
@@ -432,19 +399,15 @@ func DeleteBook(c *fiber.Ctx) error {
 
 	// Only the creator can delete his book.
 	if foundedBook.UserID == userID {
-		// Delete book by given ID.
 		if err := db.DeleteBook(foundedBook.ID); err != nil {
-			// Return status 500 and error message.
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": true,
 				"msg":   err.Error(),
 			})
 		}
 
-		// Return status 204 no content.
 		return c.SendStatus(fiber.StatusNoContent)
 	} else {
-		// Return status 403 and permission denied error message.
 		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
 			"error": true,
 			"msg":   "permission denied, only the creator can delete his book",

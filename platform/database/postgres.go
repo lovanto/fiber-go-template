@@ -10,7 +10,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
-	_ "github.com/jackc/pgx/v4/stdlib" // load pgx driver for PostgreSQL
+	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
 // PostgreSQLConnection func for connection to PostgreSQL database.
@@ -42,7 +42,7 @@ func PostgreSQLConnection() (*sqlx.DB, error) {
 
 	// Try to ping database.
 	if err := db.Ping(); err != nil {
-		defer db.Close() // close database connection
+		defer db.Close()
 		return nil, fmt.Errorf("error, not sent ping to database, %w", err)
 	}
 

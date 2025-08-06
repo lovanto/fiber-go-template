@@ -48,10 +48,8 @@ func ConnectionURLBuilder(n string) (string, error) {
 			os.Getenv("SERVER_PORT"),
 		)
 	default:
-		// Return error message.
 		return "", fmt.Errorf("connection name '%v' is not supported", n)
 	}
 
-	// Return connection URL.
 	return url, nil
 }
