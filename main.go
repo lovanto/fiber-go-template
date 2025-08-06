@@ -32,10 +32,13 @@ func main() {
 	app := fiber.New(config)
 	middleware.FiberMiddleware(app)
 
-	routes.SwaggerRoute(app)
 	routes.PublicRoutes(app)
 	routes.PrivateRoutes(app)
 	routes.NotFoundRoute(app)
+
+	if os.Getenv("STAGE_STATUS") == "dev" {
+		routes.SwaggerRoute(app)
+	}
 
 	if os.Getenv("STAGE_STATUS") == "dev" {
 		utils.StartServer(app)
