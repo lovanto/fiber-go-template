@@ -12,7 +12,7 @@ const docTemplate = `{
         "termsOfService": "http://swagger.io/terms/",
         "contact": {
             "name": "API Support",
-            "email": "your@mail.com"
+            "email": "lovanto@altimeda.com"
         },
         "license": {
             "name": "Apache 2.0",
@@ -43,66 +43,18 @@ const docTemplate = `{
                 "summary": "update book",
                 "parameters": [
                     {
-                        "description": "Book ID",
-                        "name": "id",
+                        "description": "Book",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "description": "Title",
-                        "name": "title",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "description": "Author",
-                        "name": "author",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "description": "User ID",
-                        "name": "user_id",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "description": "Book status",
-                        "name": "book_status",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "description": "Book attributes",
-                        "name": "book_attrs",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.BookAttrs"
+                            "$ref": "#/definitions/models.BookUpdate"
                         }
                     }
                 ],
                 "responses": {
-                    "202": {
-                        "description": "ok",
-                        "schema": {
-                            "type": "string"
-                        }
+                    "201": {
+                        "description": "Created"
                     }
                 }
             },
@@ -125,45 +77,18 @@ const docTemplate = `{
                 "summary": "create a new book",
                 "parameters": [
                     {
-                        "description": "Title",
-                        "name": "title",
+                        "description": "Book",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "description": "Author",
-                        "name": "author",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "description": "User ID",
-                        "name": "user_id",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "description": "Book attributes",
-                        "name": "book_attrs",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.BookAttrs"
+                            "$ref": "#/definitions/models.BookCreate"
                         }
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/models.Book"
                         }
@@ -190,20 +115,17 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "Book ID",
-                        "name": "id",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/models.BookDelete"
                         }
                     }
                 ],
                 "responses": {
                     "204": {
-                        "description": "ok",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "description": "No Content"
                     }
                 }
             }
@@ -286,20 +208,20 @@ const docTemplate = `{
                 "summary": "renew access and refresh tokens",
                 "parameters": [
                     {
-                        "description": "Refresh token",
-                        "name": "refresh_token",
+                        "description": "Renew Request",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/models.Renew"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "ok",
+                        "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/models.TokenResponse"
                         }
                     }
                 }
@@ -333,7 +255,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/controllers.SignInResponse"
+                            "$ref": "#/definitions/models.TokenResponse"
                         }
                     }
                 }
@@ -382,30 +304,12 @@ const docTemplate = `{
                 "summary": "create a new user",
                 "parameters": [
                     {
-                        "description": "Email",
-                        "name": "email",
+                        "description": "Sign Up Request",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "description": "Password",
-                        "name": "password",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "description": "User role",
-                        "name": "user_role",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/models.SignUp"
                         }
                     }
                 ],
@@ -421,35 +325,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "controllers.SignInResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "boolean",
-                    "example": false
-                },
-                "msg": {
-                    "type": "string",
-                    "example": "Sign in successful"
-                },
-                "tokens": {
-                    "$ref": "#/definitions/controllers.TokenResponse"
-                }
-            }
-        },
-        "controllers.TokenResponse": {
-            "type": "object",
-            "properties": {
-                "access": {
-                    "type": "string",
-                    "example": "access-token"
-                },
-                "refresh": {
-                    "type": "string",
-                    "example": "refresh-token"
-                }
-            }
-        },
         "models.Book": {
             "type": "object",
             "required": [
@@ -505,6 +380,83 @@ const docTemplate = `{
                 }
             }
         },
+        "models.BookCreate": {
+            "type": "object",
+            "required": [
+                "author",
+                "book_attrs",
+                "title",
+                "user_id"
+            ],
+            "properties": {
+                "author": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "book_attrs": {
+                    "$ref": "#/definitions/models.BookAttrs"
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.BookDelete": {
+            "type": "object",
+            "required": [
+                "id"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.BookUpdate": {
+            "type": "object",
+            "required": [
+                "author",
+                "book_attrs",
+                "book_status",
+                "id",
+                "title",
+                "user_id"
+            ],
+            "properties": {
+                "author": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "book_attrs": {
+                    "$ref": "#/definitions/models.BookAttrs"
+                },
+                "book_status": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Renew": {
+            "type": "object",
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
         "models.SignIn": {
             "type": "object",
             "required": [
@@ -519,6 +471,41 @@ const docTemplate = `{
                 "password": {
                     "type": "string",
                     "maxLength": 255
+                }
+            }
+        },
+        "models.SignUp": {
+            "type": "object",
+            "required": [
+                "email",
+                "password",
+                "user_role"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "user_role": {
+                    "type": "string",
+                    "maxLength": 25
+                }
+            }
+        },
+        "models.TokenResponse": {
+            "type": "object",
+            "properties": {
+                "access": {
+                    "type": "string",
+                    "example": "access-token"
+                },
+                "refresh": {
+                    "type": "string",
+                    "example": "refresh-token"
                 }
             }
         },

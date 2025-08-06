@@ -1,6 +1,9 @@
 package utils
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 )
@@ -18,10 +21,10 @@ func NewValidator() *validator.Validate {
 	return validate
 }
 
-func ValidatorErrors(err error) map[string]string {
-	fields := map[string]string{}
+func ValidatorErrors(err error) string {
+	fields := make([]string, 0)
 	for _, err := range err.(validator.ValidationErrors) {
-		fields[err.Field()] = err.Error()
+		fields = append(fields, fmt.Sprintf("%s: %s", err.Field(), err.Error()))
 	}
-	return fields
+	return strings.Join(fields, ", ")
 }

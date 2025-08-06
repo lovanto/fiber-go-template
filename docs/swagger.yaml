@@ -1,25 +1,5 @@
 basePath: /api
 definitions:
-  controllers.SignInResponse:
-    properties:
-      error:
-        example: false
-        type: boolean
-      msg:
-        example: Sign in successful
-        type: string
-      tokens:
-        $ref: '#/definitions/controllers.TokenResponse'
-    type: object
-  controllers.TokenResponse:
-    properties:
-      access:
-        example: access-token
-        type: string
-      refresh:
-        example: refresh-token
-        type: string
-    type: object
   models.Book:
     properties:
       author:
@@ -59,6 +39,60 @@ definitions:
         minimum: 1
         type: integer
     type: object
+  models.BookCreate:
+    properties:
+      author:
+        maxLength: 255
+        type: string
+      book_attrs:
+        $ref: '#/definitions/models.BookAttrs'
+      title:
+        maxLength: 255
+        type: string
+      user_id:
+        type: string
+    required:
+    - author
+    - book_attrs
+    - title
+    - user_id
+    type: object
+  models.BookDelete:
+    properties:
+      id:
+        type: string
+    required:
+    - id
+    type: object
+  models.BookUpdate:
+    properties:
+      author:
+        maxLength: 255
+        type: string
+      book_attrs:
+        $ref: '#/definitions/models.BookAttrs'
+      book_status:
+        type: integer
+      id:
+        type: string
+      title:
+        maxLength: 255
+        type: string
+      user_id:
+        type: string
+    required:
+    - author
+    - book_attrs
+    - book_status
+    - id
+    - title
+    - user_id
+    type: object
+  models.Renew:
+    properties:
+      refresh_token:
+        type: string
+    type: object
   models.SignIn:
     properties:
       email:
@@ -70,6 +104,31 @@ definitions:
     required:
     - email
     - password
+    type: object
+  models.SignUp:
+    properties:
+      email:
+        maxLength: 255
+        type: string
+      password:
+        maxLength: 255
+        type: string
+      user_role:
+        maxLength: 25
+        type: string
+    required:
+    - email
+    - password
+    - user_role
+    type: object
+  models.TokenResponse:
+    properties:
+      access:
+        example: access-token
+        type: string
+      refresh:
+        example: refresh-token
+        type: string
     type: object
   models.User:
     properties:
@@ -99,7 +158,7 @@ definitions:
     type: object
 info:
   contact:
-    email: your@mail.com
+    email: lovanto@altimeda.com
     name: API Support
   description: This is an auto-generated API Docs.
   license:
@@ -117,17 +176,15 @@ paths:
       parameters:
       - description: Book ID
         in: body
-        name: id
+        name: request
         required: true
         schema:
-          type: string
+          $ref: '#/definitions/models.BookDelete'
       produces:
       - application/json
       responses:
         "204":
-          description: ok
-          schema:
-            type: string
+          description: No Content
       security:
       - ApiKeyAuth: []
       summary: delete book by given ID
@@ -138,35 +195,17 @@ paths:
       - application/json
       description: Create a new book.
       parameters:
-      - description: Title
+      - description: Book
         in: body
-        name: title
+        name: request
         required: true
         schema:
-          type: string
-      - description: Author
-        in: body
-        name: author
-        required: true
-        schema:
-          type: string
-      - description: User ID
-        in: body
-        name: user_id
-        required: true
-        schema:
-          type: string
-      - description: Book attributes
-        in: body
-        name: book_attrs
-        required: true
-        schema:
-          $ref: '#/definitions/models.BookAttrs'
+          $ref: '#/definitions/models.BookCreate'
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "201":
+          description: Created
           schema:
             $ref: '#/definitions/models.Book'
       security:
@@ -179,49 +218,17 @@ paths:
       - application/json
       description: Update book.
       parameters:
-      - description: Book ID
+      - description: Book
         in: body
-        name: id
+        name: request
         required: true
         schema:
-          type: string
-      - description: Title
-        in: body
-        name: title
-        required: true
-        schema:
-          type: string
-      - description: Author
-        in: body
-        name: author
-        required: true
-        schema:
-          type: string
-      - description: User ID
-        in: body
-        name: user_id
-        required: true
-        schema:
-          type: string
-      - description: Book status
-        in: body
-        name: book_status
-        required: true
-        schema:
-          type: integer
-      - description: Book attributes
-        in: body
-        name: book_attrs
-        required: true
-        schema:
-          $ref: '#/definitions/models.BookAttrs'
+          $ref: '#/definitions/models.BookUpdate'
       produces:
       - application/json
       responses:
-        "202":
-          description: ok
-          schema:
-            type: string
+        "201":
+          description: Created
       security:
       - ApiKeyAuth: []
       summary: update book
@@ -271,19 +278,19 @@ paths:
       - application/json
       description: Renew access and refresh tokens.
       parameters:
-      - description: Refresh token
+      - description: Renew Request
         in: body
-        name: refresh_token
+        name: request
         required: true
         schema:
-          type: string
+          $ref: '#/definitions/models.Renew'
       produces:
       - application/json
       responses:
         "200":
-          description: ok
+          description: OK
           schema:
-            type: string
+            $ref: '#/definitions/models.TokenResponse'
       security:
       - ApiKeyAuth: []
       summary: renew access and refresh tokens
@@ -307,7 +314,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/controllers.SignInResponse'
+            $ref: '#/definitions/models.TokenResponse'
       summary: auth user and return access and refresh token
       tags:
       - User
@@ -334,24 +341,12 @@ paths:
       - application/json
       description: Create a new user.
       parameters:
-      - description: Email
+      - description: Sign Up Request
         in: body
-        name: email
+        name: request
         required: true
         schema:
-          type: string
-      - description: Password
-        in: body
-        name: password
-        required: true
-        schema:
-          type: string
-      - description: User role
-        in: body
-        name: user_role
-        required: true
-        schema:
-          type: string
+          $ref: '#/definitions/models.SignUp'
       produces:
       - application/json
       responses:

@@ -18,8 +18,8 @@ import (
 // @Tags Token
 // @Accept json
 // @Produce json
-// @Param refresh_token body string true "Refresh token"
-// @Success 200 {string} status "ok"
+// @Param request body models.Renew true "Renew Request"
+// @Success 200 {object} models.TokenResponse
 // @Security ApiKeyAuth
 // @Router /v1/token/renew [post]
 func RenewTokens(c *fiber.Ctx) error {

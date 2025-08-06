@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"time"
 
 	"github.com/create-go-app/fiber-go-template/app/models"
@@ -94,11 +95,8 @@ func GetBook(c *fiber.Ctx) error {
 // @Tags Book
 // @Accept json
 // @Produce json
-// @Param title body string true "Title"
-// @Param author body string true "Author"
-// @Param user_id body string true "User ID"
-// @Param book_attrs body models.BookAttrs true "Book attributes"
-// @Success 200 {object} models.Book
+// @Param request body models.BookCreate true "Book"
+// @Success 201 {object} models.Book
 // @Security ApiKeyAuth
 // @Router /v1/book [post]
 func CreateBook(c *fiber.Ctx) error {
@@ -106,43 +104,28 @@ func CreateBook(c *fiber.Ctx) error {
 
 	claims, err := utils.ExtractTokenMetadata(c)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": true,
-			"msg":   err.Error(),
-		})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 	}
 
 	expires := claims.Expires
 	if now > expires {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": true,
-			"msg":   "unauthorized, check expiration time of your token",
-		})
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "", errors.New(repository.UnauthorizedErrorMessage))
 	}
 
 	credential := claims.Credentials[repository.BookCreateCredential]
 	if !credential {
-		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
-			"error": true,
-			"msg":   "permission denied, check credentials of your token",
-		})
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "", errors.New(repository.ForbiddenErrorMessage))
 	}
 
 	book := &models.Book{}
 
 	if err := c.BodyParser(book); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": true,
-			"msg":   err.Error(),
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "", err)
 	}
 
 	db, err := database.OpenDBConnection()
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": true,
-			"msg":   err.Error(),
-		})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 	}
 
 	validate := utils.NewValidator()
@@ -153,24 +136,14 @@ func CreateBook(c *fiber.Ctx) error {
 	book.BookStatus = 1 // 0 == draft, 1 == active
 
 	if err := validate.Struct(book); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": true,
-			"msg":   utils.ValidatorErrors(err),
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "", errors.New(utils.ValidatorErrors(err)))
 	}
 
 	if err := db.CreateBook(book); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": true,
-			"msg":   err.Error(),
-		})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 	}
 
-	return c.JSON(fiber.Map{
-		"error": false,
-		"msg":   nil,
-		"book":  book,
-	})
+	return utils.SuccessResponse(c, "", book)
 }
 
 // UpdateBook func for updates book by given ID.
@@ -179,13 +152,8 @@ func CreateBook(c *fiber.Ctx) error {
 // @Tags Book
 // @Accept json
 // @Produce json
-// @Param id body string true "Book ID"
-// @Param title body string true "Title"
-// @Param author body string true "Author"
-// @Param user_id body string true "User ID"
-// @Param book_status body integer true "Book status"
-// @Param book_attrs body models.BookAttrs true "Book attributes"
-// @Success 202 {string} status "ok"
+// @Param request body models.BookUpdate true "Book"
+// @Success 201
 // @Security ApiKeyAuth
 // @Router /v1/book [put]
 func UpdateBook(c *fiber.Ctx) error {
@@ -193,50 +161,32 @@ func UpdateBook(c *fiber.Ctx) error {
 
 	claims, err := utils.ExtractTokenMetadata(c)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": true,
-			"msg":   err.Error(),
-		})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 	}
 
 	expires := claims.Expires
 	if now > expires {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": true,
-			"msg":   "unauthorized, check expiration time of your token",
-		})
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "", errors.New(repository.UnauthorizedErrorMessage))
 	}
 
 	credential := claims.Credentials[repository.BookUpdateCredential]
 	if !credential {
-		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
-			"error": true,
-			"msg":   "permission denied, check credentials of your token",
-		})
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "", errors.New(repository.ForbiddenErrorMessage))
 	}
 
 	book := &models.Book{}
 	if err := c.BodyParser(book); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": true,
-			"msg":   err.Error(),
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "", err)
 	}
 
 	db, err := database.OpenDBConnection()
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": true,
-			"msg":   err.Error(),
-		})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 	}
 
 	foundedBook, err := db.GetBook(book.ID)
 	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"error": true,
-			"msg":   "book with this ID not found",
-		})
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "", errors.New(repository.NotFoundErrorMessage))
 	}
 
 	userID := claims.UserID
@@ -245,28 +195,16 @@ func UpdateBook(c *fiber.Ctx) error {
 		book.UpdatedAt = time.Now()
 		validate := utils.NewValidator()
 		if err := validate.Struct(book); err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": true,
-				"msg":   utils.ValidatorErrors(err),
-			})
+			return utils.ErrorResponse(c, fiber.StatusBadRequest, "", errors.New(utils.ValidatorErrors(err)))
 		}
 
 		if err := db.UpdateBook(foundedBook.ID, book); err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": true,
-				"msg":   err.Error(),
-			})
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 		}
 
-		return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-			"error": false,
-			"msg":   nil,
-		})
+		return utils.SuccessResponse(c, "", nil)
 	} else {
-		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
-			"error": true,
-			"msg":   "permission denied, only the creator can delete his book",
-		})
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "", errors.New(repository.ForbiddenDataModificationErrorMessage))
 	}
 }
 
@@ -276,8 +214,8 @@ func UpdateBook(c *fiber.Ctx) error {
 // @Tags Book
 // @Accept json
 // @Produce json
-// @Param id body string true "Book ID"
-// @Success 204 {string} status "ok"
+// @Param request body models.BookDelete true "Book ID"
+// @Success 204
 // @Security ApiKeyAuth
 // @Router /v1/book [delete]
 func DeleteBook(c *fiber.Ctx) error {
@@ -285,75 +223,48 @@ func DeleteBook(c *fiber.Ctx) error {
 
 	claims, err := utils.ExtractTokenMetadata(c)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": true,
-			"msg":   err.Error(),
-		})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 	}
 
 	expires := claims.Expires
 	if now > expires {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": true,
-			"msg":   "unauthorized, check expiration time of your token",
-		})
+		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "", errors.New(repository.UnauthorizedErrorMessage))
 	}
 
 	credential := claims.Credentials[repository.BookDeleteCredential]
 	if !credential {
-		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
-			"error": true,
-			"msg":   "permission denied, check credentials of your token",
-		})
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "", errors.New(repository.ForbiddenErrorMessage))
 	}
 
-	book := &models.Book{}
+	book := &models.BookDelete{}
 
 	if err := c.BodyParser(book); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": true,
-			"msg":   err.Error(),
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "", err)
 	}
 
 	validate := utils.NewValidator()
 	if err := validate.StructPartial(book, "id"); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": true,
-			"msg":   utils.ValidatorErrors(err),
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "", err)
 	}
 
 	db, err := database.OpenDBConnection()
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": true,
-			"msg":   err.Error(),
-		})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 	}
 
 	foundedBook, err := db.GetBook(book.ID)
 	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"error": true,
-			"msg":   "book with this ID not found",
-		})
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "", errors.New(repository.NotFoundErrorMessage))
 	}
 
 	userID := claims.UserID
 	if foundedBook.UserID == userID {
 		if err := db.DeleteBook(foundedBook.ID); err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": true,
-				"msg":   err.Error(),
-			})
+			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 		}
 
 		return c.SendStatus(fiber.StatusNoContent)
 	} else {
-		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
-			"error": true,
-			"msg":   "permission denied, only the creator can delete his book",
-		})
+		return utils.ErrorResponse(c, fiber.StatusForbidden, "", errors.New(repository.ForbiddenDataModificationErrorMessage))
 	}
 }

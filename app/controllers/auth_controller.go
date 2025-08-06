@@ -19,43 +19,29 @@ import (
 // @Tags User
 // @Accept json
 // @Produce json
-// @Param email body string true "Email"
-// @Param password body string true "Password"
-// @Param user_role body string true "User role"
+// @Param request body models.SignUp true "Sign Up Request"
 // @Success 200 {object} models.User
 // @Router /v1/user/sign/up [post]
 func UserSignUp(c *fiber.Ctx) error {
 	signUp := &models.SignUp{}
 
 	if err := c.BodyParser(signUp); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": true,
-			"msg":   err.Error(),
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "", err)
 	}
 
 	validate := utils.NewValidator()
 	if err := validate.Struct(signUp); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": true,
-			"msg":   utils.ValidatorErrors(err),
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "", err)
 	}
 
 	db, err := database.OpenDBConnection()
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": true,
-			"msg":   err.Error(),
-		})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 	}
 
 	role, err := utils.VerifyRole(signUp.UserRole)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": true,
-			"msg":   err.Error(),
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "", err)
 	}
 
 	user := &models.User{}
@@ -67,37 +53,16 @@ func UserSignUp(c *fiber.Ctx) error {
 	user.UserRole = role
 
 	if err := validate.Struct(user); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": true,
-			"msg":   utils.ValidatorErrors(err),
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "", err)
 	}
 
 	if err := db.CreateUser(user); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": true,
-			"msg":   err.Error(),
-		})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 	}
 
 	user.PasswordHash = ""
 
-	return c.JSON(fiber.Map{
-		"error": false,
-		"msg":   nil,
-		"user":  user,
-	})
-}
-
-type TokenResponse struct {
-	Access  string `json:"access" example:"access-token"`
-	Refresh string `json:"refresh" example:"refresh-token"`
-}
-
-type SignInResponse struct {
-	Error  bool          `json:"error" example:"false"`
-	Msg    string        `json:"msg" example:"Sign in successful"`
-	Tokens TokenResponse `json:"tokens"`
+	return utils.SuccessResponse(c, "", user)
 }
 
 // UserSignIn method to auth user and return access and refresh tokens.
@@ -107,83 +72,55 @@ type SignInResponse struct {
 // @Accept json
 // @Produce json
 // @Param request body models.SignIn true "Sign In Request"
-// @Success 200 {object} SignInResponse
+// @Success 200 {object} models.TokenResponse
 // @Router /v1/user/sign/in [post]
 func UserSignIn(c *fiber.Ctx) error {
 	signIn := &models.SignIn{}
 
 	if err := c.BodyParser(signIn); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": true,
-			"msg":   err.Error(),
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "", err)
 	}
 
 	db, err := database.OpenDBConnection()
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": true,
-			"msg":   err.Error(),
-		})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 	}
 
 	foundedUser, err := db.GetUserByEmail(signIn.Email)
 	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"error": true,
-			"msg":   "user with the given email is not found",
-		})
+		return utils.ErrorResponse(c, fiber.StatusNotFound, "", err)
 	}
 
 	compareUserPassword := utils.ComparePasswords(foundedUser.PasswordHash, signIn.Password)
 	if !compareUserPassword {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": true,
-			"msg":   "wrong user email address or password",
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "", err)
 	}
 
 	credentials, err := utils.GetCredentialsByRole(foundedUser.UserRole)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": true,
-			"msg":   err.Error(),
-		})
+		return utils.ErrorResponse(c, fiber.StatusBadRequest, "", err)
 	}
 
 	tokens, err := utils.GenerateNewTokens(foundedUser.ID.String(), credentials)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": true,
-			"msg":   err.Error(),
-		})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 	}
 
 	userID := foundedUser.ID.String()
 
 	connRedis, err := cache.RedisConnection()
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": true,
-			"msg":   err.Error(),
-		})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 	}
 
 	errSaveToRedis := connRedis.Set(context.Background(), userID, tokens.Refresh, 0).Err()
 	if errSaveToRedis != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": true,
-			"msg":   errSaveToRedis.Error(),
-		})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "", errSaveToRedis)
 	}
 
-	return c.JSON(fiber.Map{
-		"error": false,
-		"msg":   nil,
-		"tokens": fiber.Map{
-			"access":  tokens.Access,
-			"refresh": tokens.Refresh,
-		},
+	return utils.SuccessResponse(c, "", models.TokenResponse{
+		Access:  tokens.Access,
+		Refresh: tokens.Refresh,
 	})
 }
 
@@ -199,29 +136,20 @@ func UserSignIn(c *fiber.Ctx) error {
 func UserSignOut(c *fiber.Ctx) error {
 	claims, err := utils.ExtractTokenMetadata(c)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": true,
-			"msg":   err.Error(),
-		})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 	}
 
 	userID := claims.UserID.String()
 
 	connRedis, err := cache.RedisConnection()
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": true,
-			"msg":   err.Error(),
-		})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 	}
 
 	errDelFromRedis := connRedis.Del(context.Background(), userID).Err()
 	if errDelFromRedis != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": true,
-			"msg":   errDelFromRedis.Error(),
-		})
+		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "", errDelFromRedis)
 	}
 
-	return c.SendStatus(fiber.StatusNoContent)
+	return utils.SuccessResponse(c, "", "ok")
 }
