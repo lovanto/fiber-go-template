@@ -117,7 +117,7 @@ func CreateBook(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusForbidden, "", errors.New(repository.ForbiddenErrorMessage))
 	}
 
-	book := &models.Book{}
+	book := &models.BookCreate{}
 
 	if err := c.BodyParser(book); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "", err)
@@ -130,16 +130,21 @@ func CreateBook(c *fiber.Ctx) error {
 
 	validate := utils.NewValidator()
 
-	book.ID = uuid.New()
-	book.CreatedAt = time.Now()
-	book.UserID = claims.UserID
-	book.BookStatus = 1 // 0 == draft, 1 == active
+	bookCreate := &models.Book{}
+	bookCreate.ID = uuid.New()
+	bookCreate.CreatedAt = time.Now()
+	bookCreate.UpdatedAt = time.Now()
+	bookCreate.UserID = claims.UserID
+	bookCreate.Title = book.Title
+	bookCreate.Author = book.Author
+	bookCreate.BookAttrs = book.BookAttrs
+	bookCreate.BookStatus = 1 // 0 == draft, 1 == active
 
 	if err := validate.Struct(book); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "", errors.New(utils.ValidatorErrors(err)))
 	}
 
-	if err := db.CreateBook(book); err != nil {
+	if err := db.CreateBook(bookCreate); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 	}
 
@@ -153,7 +158,7 @@ func CreateBook(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param request body models.BookUpdate true "Book"
-// @Success 201
+// @Success 201 {object} models.Book
 // @Security ApiKeyAuth
 // @Router /v1/book [put]
 func UpdateBook(c *fiber.Ctx) error {
@@ -174,7 +179,7 @@ func UpdateBook(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusForbidden, "", errors.New(repository.ForbiddenErrorMessage))
 	}
 
-	book := &models.Book{}
+	book := &models.BookUpdate{}
 	if err := c.BodyParser(book); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "", err)
 	}
@@ -192,17 +197,22 @@ func UpdateBook(c *fiber.Ctx) error {
 	userID := claims.UserID
 
 	if foundedBook.UserID == userID {
-		book.UpdatedAt = time.Now()
+		bookUpdate := &models.Book{}
+		bookUpdate.ID = book.ID
+		bookUpdate.UpdatedAt = time.Now()
+		bookUpdate.Title = book.Title
+		bookUpdate.Author = book.Author
+		bookUpdate.BookAttrs = book.BookAttrs
 		validate := utils.NewValidator()
 		if err := validate.Struct(book); err != nil {
 			return utils.ErrorResponse(c, fiber.StatusBadRequest, "", errors.New(utils.ValidatorErrors(err)))
 		}
 
-		if err := db.UpdateBook(foundedBook.ID, book); err != nil {
+		if err := db.UpdateBook(foundedBook.ID, bookUpdate); err != nil {
 			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 		}
 
-		return utils.SuccessResponse(c, "", nil)
+		return utils.SuccessResponse(c, "", book)
 	} else {
 		return utils.ErrorResponse(c, fiber.StatusForbidden, "", errors.New(repository.ForbiddenDataModificationErrorMessage))
 	}
@@ -215,7 +225,7 @@ func UpdateBook(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param request body models.BookDelete true "Book ID"
-// @Success 204
+// @Success 200 {string} status "ok"
 // @Security ApiKeyAuth
 // @Router /v1/book [delete]
 func DeleteBook(c *fiber.Ctx) error {
@@ -263,7 +273,7 @@ func DeleteBook(c *fiber.Ctx) error {
 			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 		}
 
-		return c.SendStatus(fiber.StatusNoContent)
+		return utils.SuccessResponse(c, "", "ok")
 	} else {
 		return utils.ErrorResponse(c, fiber.StatusForbidden, "", errors.New(repository.ForbiddenDataModificationErrorMessage))
 	}

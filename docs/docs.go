@@ -54,7 +54,10 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created"
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.Book"
+                        }
                     }
                 }
             },
@@ -124,8 +127,11 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "204": {
-                        "description": "No Content"
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 }
             }
@@ -317,7 +323,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.User"
+                            "$ref": "#/definitions/models.SignUp"
                         }
                     }
                 }
@@ -330,7 +336,6 @@ const docTemplate = `{
             "required": [
                 "author",
                 "book_attrs",
-                "book_status",
                 "id",
                 "title",
                 "user_id"
@@ -344,7 +349,11 @@ const docTemplate = `{
                     "$ref": "#/definitions/models.BookAttrs"
                 },
                 "book_status": {
-                    "type": "integer"
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ]
                 },
                 "created_at": {
                     "type": "string"
@@ -385,8 +394,7 @@ const docTemplate = `{
             "required": [
                 "author",
                 "book_attrs",
-                "title",
-                "user_id"
+                "title"
             ],
             "properties": {
                 "author": {
@@ -396,12 +404,16 @@ const docTemplate = `{
                 "book_attrs": {
                     "$ref": "#/definitions/models.BookAttrs"
                 },
+                "book_status": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ]
+                },
                 "title": {
                     "type": "string",
                     "maxLength": 255
-                },
-                "user_id": {
-                    "type": "string"
                 }
             }
         },
@@ -421,10 +433,8 @@ const docTemplate = `{
             "required": [
                 "author",
                 "book_attrs",
-                "book_status",
                 "id",
-                "title",
-                "user_id"
+                "title"
             ],
             "properties": {
                 "author": {
@@ -435,7 +445,11 @@ const docTemplate = `{
                     "$ref": "#/definitions/models.BookAttrs"
                 },
                 "book_status": {
-                    "type": "integer"
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ]
                 },
                 "id": {
                     "type": "string"
@@ -443,9 +457,6 @@ const docTemplate = `{
                 "title": {
                     "type": "string",
                     "maxLength": 255
-                },
-                "user_id": {
-                    "type": "string"
                 }
             }
         },
@@ -506,42 +517,6 @@ const docTemplate = `{
                 "refresh": {
                     "type": "string",
                     "example": "refresh-token"
-                }
-            }
-        },
-        "models.User": {
-            "type": "object",
-            "required": [
-                "email",
-                "id",
-                "password_hash",
-                "user_role",
-                "user_status"
-            ],
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string",
-                    "maxLength": 255
-                },
-                "id": {
-                    "type": "string"
-                },
-                "password_hash": {
-                    "type": "string",
-                    "maxLength": 255
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "user_role": {
-                    "type": "string",
-                    "maxLength": 25
-                },
-                "user_status": {
-                    "type": "integer"
                 }
             }
         }

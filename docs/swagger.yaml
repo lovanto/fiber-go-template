@@ -8,6 +8,9 @@ definitions:
       book_attrs:
         $ref: '#/definitions/models.BookAttrs'
       book_status:
+        enum:
+        - 0
+        - 1
         type: integer
       created_at:
         type: string
@@ -23,7 +26,6 @@ definitions:
     required:
     - author
     - book_attrs
-    - book_status
     - id
     - title
     - user_id
@@ -46,16 +48,18 @@ definitions:
         type: string
       book_attrs:
         $ref: '#/definitions/models.BookAttrs'
+      book_status:
+        enum:
+        - 0
+        - 1
+        type: integer
       title:
         maxLength: 255
-        type: string
-      user_id:
         type: string
     required:
     - author
     - book_attrs
     - title
-    - user_id
     type: object
   models.BookDelete:
     properties:
@@ -72,21 +76,20 @@ definitions:
       book_attrs:
         $ref: '#/definitions/models.BookAttrs'
       book_status:
+        enum:
+        - 0
+        - 1
         type: integer
       id:
         type: string
       title:
         maxLength: 255
         type: string
-      user_id:
-        type: string
     required:
     - author
     - book_attrs
-    - book_status
     - id
     - title
-    - user_id
     type: object
   models.Renew:
     properties:
@@ -130,32 +133,6 @@ definitions:
         example: refresh-token
         type: string
     type: object
-  models.User:
-    properties:
-      created_at:
-        type: string
-      email:
-        maxLength: 255
-        type: string
-      id:
-        type: string
-      password_hash:
-        maxLength: 255
-        type: string
-      updated_at:
-        type: string
-      user_role:
-        maxLength: 25
-        type: string
-      user_status:
-        type: integer
-    required:
-    - email
-    - id
-    - password_hash
-    - user_role
-    - user_status
-    type: object
 info:
   contact:
     email: lovanto@altimeda.com
@@ -183,8 +160,10 @@ paths:
       produces:
       - application/json
       responses:
-        "204":
-          description: No Content
+        "200":
+          description: ok
+          schema:
+            type: string
       security:
       - ApiKeyAuth: []
       summary: delete book by given ID
@@ -229,6 +208,8 @@ paths:
       responses:
         "201":
           description: Created
+          schema:
+            $ref: '#/definitions/models.Book'
       security:
       - ApiKeyAuth: []
       summary: update book
@@ -353,7 +334,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.User'
+            $ref: '#/definitions/models.SignUp'
       summary: create a new user
       tags:
       - User

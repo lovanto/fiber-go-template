@@ -24,7 +24,7 @@ func NewValidator() *validator.Validate {
 func ValidatorErrors(err error) string {
 	fields := make([]string, 0)
 	for _, err := range err.(validator.ValidationErrors) {
-		fields = append(fields, fmt.Sprintf("%s: %s", err.Field(), err.Error()))
+		fields = append(fields, fmt.Sprintf("%s: %s", err.Field(), err.ActualTag()))
 	}
-	return strings.Join(fields, ", ")
+	return strings.Join(fields, "\n")
 }

@@ -20,7 +20,7 @@ import (
 // @Accept json
 // @Produce json
 // @Param request body models.SignUp true "Sign Up Request"
-// @Success 200 {object} models.User
+// @Success 200 {object} models.SignUp
 // @Router /v1/user/sign/up [post]
 func UserSignUp(c *fiber.Ctx) error {
 	signUp := &models.SignUp{}
@@ -44,23 +44,28 @@ func UserSignUp(c *fiber.Ctx) error {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "", err)
 	}
 
-	user := &models.User{}
-	user.ID = uuid.New()
-	user.CreatedAt = time.Now()
+	user := &models.SignUp{}
 	user.Email = signUp.Email
-	user.PasswordHash = utils.GeneratePassword(signUp.Password)
-	user.UserStatus = 1 // 0 == blocked, 1 == active
+	user.Password = utils.GeneratePassword(signUp.Password)
 	user.UserRole = role
 
-	if err := validate.Struct(user); err != nil {
+	userCreate := &models.User{
+		ID:           uuid.New(),
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
+		Email:        user.Email,
+		PasswordHash: utils.GeneratePassword(user.Password),
+		UserStatus:   1, // 0 == blocked, 1 == active
+		UserRole:     user.UserRole,
+	}
+
+	if err := validate.Struct(userCreate); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusBadRequest, "", err)
 	}
 
-	if err := db.CreateUser(user); err != nil {
+	if err := db.CreateUser(userCreate); err != nil {
 		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 	}
-
-	user.PasswordHash = ""
 
 	return utils.SuccessResponse(c, "", user)
 }
