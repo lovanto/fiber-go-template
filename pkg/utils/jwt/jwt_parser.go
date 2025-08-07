@@ -1,13 +1,16 @@
 package jwt
 
 import (
-	"os"
-	"strings"
+    "os"
+    "strings"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
+    "github.com/gofiber/fiber/v2"
+    "github.com/golang-jwt/jwt/v5"
+    "github.com/google/uuid"
 )
+
+// verifyTokenFunc allows tests to stub token verification.
+var verifyTokenFunc = verifyToken
 
 type TokenMetadata struct {
 	UserID      uuid.UUID
@@ -16,7 +19,7 @@ type TokenMetadata struct {
 }
 
 func ExtractTokenMetadata(c *fiber.Ctx) (*TokenMetadata, error) {
-	token, err := verifyToken(c)
+	token, err := verifyTokenFunc(c)
 	if err != nil {
 		return nil, err
 	}
