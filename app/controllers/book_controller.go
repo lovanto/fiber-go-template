@@ -6,7 +6,9 @@ import (
 
 	"github.com/create-go-app/fiber-go-template/app/models"
 	"github.com/create-go-app/fiber-go-template/pkg/repository"
-	"github.com/create-go-app/fiber-go-template/pkg/utils"
+	"github.com/create-go-app/fiber-go-template/pkg/utils/jwt"
+	"github.com/create-go-app/fiber-go-template/pkg/utils/validator"
+	"github.com/create-go-app/fiber-go-template/pkg/utils/wrapper"
 	"github.com/create-go-app/fiber-go-template/platform/database"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -102,33 +104,33 @@ func GetBook(c *fiber.Ctx) error {
 func CreateBook(c *fiber.Ctx) error {
 	now := time.Now().Unix()
 
-	claims, err := utils.ExtractTokenMetadata(c)
+	claims, err := jwt.ExtractTokenMetadata(c)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
+		return wrapper.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 	}
 
 	expires := claims.Expires
 	if now > expires {
-		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "", errors.New(repository.UnauthorizedErrorMessage))
+		return wrapper.ErrorResponse(c, fiber.StatusUnauthorized, "", errors.New(repository.UnauthorizedErrorMessage))
 	}
 
 	credential := claims.Credentials[repository.BookCreateCredential]
 	if !credential {
-		return utils.ErrorResponse(c, fiber.StatusForbidden, "", errors.New(repository.ForbiddenErrorMessage))
+		return wrapper.ErrorResponse(c, fiber.StatusForbidden, "", errors.New(repository.ForbiddenErrorMessage))
 	}
 
 	book := &models.BookCreate{}
 
 	if err := c.BodyParser(book); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "", err)
+		return wrapper.ErrorResponse(c, fiber.StatusBadRequest, "", err)
 	}
 
 	db, err := database.OpenDBConnection()
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
+		return wrapper.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 	}
 
-	validate := utils.NewValidator()
+	validate := validator.NewValidator()
 
 	bookCreate := &models.Book{}
 	bookCreate.ID = uuid.New()
@@ -141,14 +143,14 @@ func CreateBook(c *fiber.Ctx) error {
 	bookCreate.BookStatus = 1 // 0 == draft, 1 == active
 
 	if err := validate.Struct(book); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "", errors.New(utils.ValidatorErrors(err)))
+		return wrapper.ErrorResponse(c, fiber.StatusBadRequest, "", errors.New(validator.ValidatorErrors(err)))
 	}
 
 	if err := db.CreateBook(bookCreate); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
+		return wrapper.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 	}
 
-	return utils.SuccessResponse(c, "", book)
+	return wrapper.SuccessResponse(c, "", book)
 }
 
 // UpdateBook func for updates book by given ID.
@@ -164,34 +166,34 @@ func CreateBook(c *fiber.Ctx) error {
 func UpdateBook(c *fiber.Ctx) error {
 	now := time.Now().Unix()
 
-	claims, err := utils.ExtractTokenMetadata(c)
+	claims, err := jwt.ExtractTokenMetadata(c)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
+		return wrapper.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 	}
 
 	expires := claims.Expires
 	if now > expires {
-		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "", errors.New(repository.UnauthorizedErrorMessage))
+		return wrapper.ErrorResponse(c, fiber.StatusUnauthorized, "", errors.New(repository.UnauthorizedErrorMessage))
 	}
 
 	credential := claims.Credentials[repository.BookUpdateCredential]
 	if !credential {
-		return utils.ErrorResponse(c, fiber.StatusForbidden, "", errors.New(repository.ForbiddenErrorMessage))
+		return wrapper.ErrorResponse(c, fiber.StatusForbidden, "", errors.New(repository.ForbiddenErrorMessage))
 	}
 
 	book := &models.BookUpdate{}
 	if err := c.BodyParser(book); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "", err)
+		return wrapper.ErrorResponse(c, fiber.StatusBadRequest, "", err)
 	}
 
 	db, err := database.OpenDBConnection()
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
+		return wrapper.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 	}
 
 	foundedBook, err := db.GetBook(book.ID)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusNotFound, "", errors.New(repository.NotFoundErrorMessage))
+		return wrapper.ErrorResponse(c, fiber.StatusNotFound, "", errors.New(repository.NotFoundErrorMessage))
 	}
 
 	userID := claims.UserID
@@ -203,18 +205,18 @@ func UpdateBook(c *fiber.Ctx) error {
 		bookUpdate.Title = book.Title
 		bookUpdate.Author = book.Author
 		bookUpdate.BookAttrs = book.BookAttrs
-		validate := utils.NewValidator()
+		validate := validator.NewValidator()
 		if err := validate.Struct(book); err != nil {
-			return utils.ErrorResponse(c, fiber.StatusBadRequest, "", errors.New(utils.ValidatorErrors(err)))
+			return wrapper.ErrorResponse(c, fiber.StatusBadRequest, "", errors.New(validator.ValidatorErrors(err)))
 		}
 
 		if err := db.UpdateBook(foundedBook.ID, bookUpdate); err != nil {
-			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
+			return wrapper.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 		}
 
-		return utils.SuccessResponse(c, "", book)
+		return wrapper.SuccessResponse(c, "", book)
 	} else {
-		return utils.ErrorResponse(c, fiber.StatusForbidden, "", errors.New(repository.ForbiddenDataModificationErrorMessage))
+		return wrapper.ErrorResponse(c, fiber.StatusForbidden, "", errors.New(repository.ForbiddenDataModificationErrorMessage))
 	}
 }
 
@@ -231,50 +233,50 @@ func UpdateBook(c *fiber.Ctx) error {
 func DeleteBook(c *fiber.Ctx) error {
 	now := time.Now().Unix()
 
-	claims, err := utils.ExtractTokenMetadata(c)
+	claims, err := jwt.ExtractTokenMetadata(c)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
+		return wrapper.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 	}
 
 	expires := claims.Expires
 	if now > expires {
-		return utils.ErrorResponse(c, fiber.StatusUnauthorized, "", errors.New(repository.UnauthorizedErrorMessage))
+		return wrapper.ErrorResponse(c, fiber.StatusUnauthorized, "", errors.New(repository.UnauthorizedErrorMessage))
 	}
 
 	credential := claims.Credentials[repository.BookDeleteCredential]
 	if !credential {
-		return utils.ErrorResponse(c, fiber.StatusForbidden, "", errors.New(repository.ForbiddenErrorMessage))
+		return wrapper.ErrorResponse(c, fiber.StatusForbidden, "", errors.New(repository.ForbiddenErrorMessage))
 	}
 
 	book := &models.BookDelete{}
 
 	if err := c.BodyParser(book); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "", err)
+		return wrapper.ErrorResponse(c, fiber.StatusBadRequest, "", err)
 	}
 
-	validate := utils.NewValidator()
+	validate := validator.NewValidator()
 	if err := validate.StructPartial(book, "id"); err != nil {
-		return utils.ErrorResponse(c, fiber.StatusBadRequest, "", err)
+		return wrapper.ErrorResponse(c, fiber.StatusBadRequest, "", err)
 	}
 
 	db, err := database.OpenDBConnection()
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
+		return wrapper.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 	}
 
 	foundedBook, err := db.GetBook(book.ID)
 	if err != nil {
-		return utils.ErrorResponse(c, fiber.StatusNotFound, "", errors.New(repository.NotFoundErrorMessage))
+		return wrapper.ErrorResponse(c, fiber.StatusNotFound, "", errors.New(repository.NotFoundErrorMessage))
 	}
 
 	userID := claims.UserID
 	if foundedBook.UserID == userID {
 		if err := db.DeleteBook(foundedBook.ID); err != nil {
-			return utils.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
+			return wrapper.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 		}
 
-		return utils.SuccessResponse(c, "", "ok")
+		return wrapper.SuccessResponse(c, "", "ok")
 	} else {
-		return utils.ErrorResponse(c, fiber.StatusForbidden, "", errors.New(repository.ForbiddenDataModificationErrorMessage))
+		return wrapper.ErrorResponse(c, fiber.StatusForbidden, "", errors.New(repository.ForbiddenDataModificationErrorMessage))
 	}
 }

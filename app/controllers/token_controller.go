@@ -5,7 +5,8 @@ import (
 	"time"
 
 	"github.com/create-go-app/fiber-go-template/app/models"
-	"github.com/create-go-app/fiber-go-template/pkg/utils"
+	"github.com/create-go-app/fiber-go-template/pkg/utils/jwt"
+	"github.com/create-go-app/fiber-go-template/pkg/utils/roles_credentials"
 	"github.com/create-go-app/fiber-go-template/platform/cache"
 	"github.com/create-go-app/fiber-go-template/platform/database"
 
@@ -25,7 +26,7 @@ import (
 func RenewTokens(c *fiber.Ctx) error {
 	now := time.Now().Unix()
 
-	claims, err := utils.ExtractTokenMetadata(c)
+	claims, err := jwt.ExtractTokenMetadata(c)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": true,
@@ -49,7 +50,7 @@ func RenewTokens(c *fiber.Ctx) error {
 		})
 	}
 
-	expiresRefreshToken, err := utils.ParseRefreshToken(renew.RefreshToken)
+	expiresRefreshToken, err := jwt.ParseRefreshToken(renew.RefreshToken)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": true,
@@ -75,7 +76,7 @@ func RenewTokens(c *fiber.Ctx) error {
 			})
 		}
 
-		credentials, err := utils.GetCredentialsByRole(foundedUser.UserRole)
+		credentials, err := roles_credentials.GetCredentialsByRole(foundedUser.UserRole)
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"error": true,
@@ -83,7 +84,7 @@ func RenewTokens(c *fiber.Ctx) error {
 			})
 		}
 
-		tokens, err := utils.GenerateNewTokens(userID.String(), credentials)
+		tokens, err := jwt.GenerateNewTokens(userID.String(), credentials)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"error": true,

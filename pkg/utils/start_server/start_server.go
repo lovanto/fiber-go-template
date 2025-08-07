@@ -1,10 +1,11 @@
-package utils
+package start_server
 
 import (
 	"log"
 	"os"
 	"os/signal"
 
+	"github.com/create-go-app/fiber-go-template/pkg/utils/connection_url_builder"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -23,7 +24,7 @@ func StartServerWithGracefulShutdown(a *fiber.App) {
 		close(idleConnsClosed)
 	}()
 
-	fiberConnURL, _ := ConnectionURLBuilder("fiber")
+	fiberConnURL, _ := connection_url_builder.ConnectionURLBuilder("fiber")
 
 	if err := a.Listen(fiberConnURL); err != nil {
 		log.Printf("Oops... Server is not running! Reason: %v", err)
@@ -33,7 +34,7 @@ func StartServerWithGracefulShutdown(a *fiber.App) {
 }
 
 func StartServer(a *fiber.App) {
-	fiberConnURL, _ := ConnectionURLBuilder("fiber")
+	fiberConnURL, _ := connection_url_builder.ConnectionURLBuilder("fiber")
 	if err := a.Listen(fiberConnURL); err != nil {
 		log.Printf("Oops... Server is not running! Reason: %v", err)
 	}

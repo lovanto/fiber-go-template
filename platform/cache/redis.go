@@ -4,14 +4,14 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/create-go-app/fiber-go-template/pkg/utils"
+	"github.com/create-go-app/fiber-go-template/pkg/utils/connection_url_builder"
 
 	"github.com/redis/go-redis/v9"
 )
 
 func RedisConnection() (*redis.Client, error) {
 	dbNumber, _ := strconv.Atoi(os.Getenv("REDIS_DB_NUMBER"))
-	redisConnURL, err := utils.ConnectionURLBuilder("redis")
+	redisConnURL, err := connection_url_builder.ConnectionURLBuilder("redis")
 	if err != nil {
 		return nil, err
 	}

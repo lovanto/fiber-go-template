@@ -1,4 +1,4 @@
-package utils
+package wrapper
 
 import (
 	"github.com/gofiber/fiber/v2"

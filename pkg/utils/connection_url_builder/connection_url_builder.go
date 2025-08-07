@@ -1,4 +1,4 @@
-package utils
+package connection_url_builder
 
 import (
 	"fmt"

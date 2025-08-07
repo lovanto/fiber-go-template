@@ -6,7 +6,7 @@ import (
 	"github.com/create-go-app/fiber-go-template/pkg/configs"
 	"github.com/create-go-app/fiber-go-template/pkg/middleware"
 	"github.com/create-go-app/fiber-go-template/pkg/routes"
-	"github.com/create-go-app/fiber-go-template/pkg/utils"
+	"github.com/create-go-app/fiber-go-template/pkg/utils/start_server"
 
 	"github.com/gofiber/fiber/v2"
 
@@ -40,8 +40,8 @@ func main() {
 	routes.NotFoundRoute(app)
 
 	if os.Getenv("STAGE_STATUS") == "dev" {
-		utils.StartServer(app)
+		start_server.StartServer(app)
 	} else {
-		utils.StartServerWithGracefulShutdown(app)
+		start_server.StartServerWithGracefulShutdown(app)
 	}
 }

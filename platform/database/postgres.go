@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/create-go-app/fiber-go-template/pkg/utils"
+	"github.com/create-go-app/fiber-go-template/pkg/utils/connection_url_builder"
 
 	"github.com/jmoiron/sqlx"
 
@@ -18,7 +18,7 @@ func PostgreSQLConnection() (*sqlx.DB, error) {
 	maxIdleConn, _ := strconv.Atoi(os.Getenv("DB_MAX_IDLE_CONNECTIONS"))
 	maxLifetimeConn, _ := strconv.Atoi(os.Getenv("DB_MAX_LIFETIME_CONNECTIONS"))
 
-	postgresConnURL, err := utils.ConnectionURLBuilder("postgres")
+	postgresConnURL, err := connection_url_builder.ConnectionURLBuilder("postgres")
 	if err != nil {
 		return nil, err
 	}

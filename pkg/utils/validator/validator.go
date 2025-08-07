@@ -1,4 +1,4 @@
-package utils
+package validator
 
 import (
 	"fmt"
@@ -12,19 +12,25 @@ func NewValidator() *validator.Validate {
 	validate := validator.New()
 	_ = validate.RegisterValidation("uuid", func(fl validator.FieldLevel) bool {
 		field := fl.Field().String()
-		if _, err := uuid.Parse(field); err != nil {
-			return true
+		if _, err := uuid.Parse(field); err == nil {
+			return true // valid UUID
 		}
-		return false
+		return false // invalid UUID
 	})
-
 	return validate
 }
 
 func ValidatorErrors(err error) string {
+	if err == nil {
+		return ""
+	}
+	verrs, ok := err.(validator.ValidationErrors)
+	if !ok {
+		return ""
+	}
 	fields := make([]string, 0)
-	for _, err := range err.(validator.ValidationErrors) {
-		fields = append(fields, fmt.Sprintf("%s: %s", err.Field(), err.ActualTag()))
+	for _, ferr := range verrs {
+		fields = append(fields, fmt.Sprintf("%s: %s", ferr.Field(), ferr.ActualTag()))
 	}
 	return strings.Join(fields, "\n")
 }

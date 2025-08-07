@@ -18,7 +18,7 @@ lint:
 	golangci-lint run ./...
 
 test: clean critic security lint
-	go test -v -timeout 30s -coverprofile=cover.out -cover ./...
+	go test -timeout 30s -coverprofile=cover.out ./... -coverpkg=./... -cover
 	go tool cover -func=cover.out
 
 build: test
