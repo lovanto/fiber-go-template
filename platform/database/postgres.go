@@ -7,11 +7,13 @@ import (
 	"time"
 
 	"github.com/create-go-app/fiber-go-template/pkg/utils/connection_url_builder"
-
 	"github.com/jmoiron/sqlx"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
 )
+
+// Allow sqlx.Connect to be overridden in tests
+var sqlxConnectFunc = sqlx.Connect
 
 func PostgreSQLConnection() (*sqlx.DB, error) {
 	maxConn, _ := strconv.Atoi(os.Getenv("DB_MAX_CONNECTIONS"))
@@ -23,14 +25,14 @@ func PostgreSQLConnection() (*sqlx.DB, error) {
 		return nil, err
 	}
 
-	db, err := sqlx.Connect("pgx", postgresConnURL)
+	db, err := sqlxConnectFunc("pgx", postgresConnURL)
 	if err != nil {
 		return nil, fmt.Errorf("error, not connected to database, %w", err)
 	}
 
 	db.SetMaxOpenConns(maxConn)
 	db.SetMaxIdleConns(maxIdleConn)
-	db.SetConnMaxLifetime(time.Duration(maxLifetimeConn))
+	db.SetConnMaxLifetime(time.Duration(maxLifetimeConn) * time.Second)
 
 	if err := db.Ping(); err != nil {
 		defer db.Close()

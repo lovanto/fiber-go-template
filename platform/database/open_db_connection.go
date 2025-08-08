@@ -17,7 +17,9 @@ type Queries struct {
 // These function variables allow us to mock the database connections in tests
 var (
 	postgreSQLConn = PostgreSQLConnection
-	mysqlConn      = MysqlConnection
+	mysqlConn      = func() (*sqlx.DB, error) {
+		return MysqlConnection()
+	}
 )
 
 func OpenDBConnection() (*Queries, error) {

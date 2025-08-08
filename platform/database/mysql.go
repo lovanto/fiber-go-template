@@ -7,23 +7,30 @@ import (
 	"time"
 
 	"github.com/create-go-app/fiber-go-template/pkg/utils/connection_url_builder"
-
-	"github.com/jmoiron/sqlx"
-
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/jmoiron/sqlx"
 )
 
-func MysqlConnection() (*sqlx.DB, error) {
+// allows test override
+var sqlxConnect = sqlx.Connect
+
+func MysqlConnection(builders ...func(string) (string, error)) (*sqlx.DB, error) {
 	maxConn, _ := strconv.Atoi(os.Getenv("DB_MAX_CONNECTIONS"))
 	maxIdleConn, _ := strconv.Atoi(os.Getenv("DB_MAX_IDLE_CONNECTIONS"))
 	maxLifetimeConn, _ := strconv.Atoi(os.Getenv("DB_MAX_LIFETIME_CONNECTIONS"))
 
-	mysqlConnURL, err := connection_url_builder.ConnectionURLBuilder("mysql")
-	if err != nil {
-		return nil, err
+	// Use the provided builder or default
+	var builder func(string) (string, error) = connection_url_builder.ConnectionURLBuilder
+	if len(builders) > 0 && builders[0] != nil {
+		builder = builders[0]
 	}
 
-	db, err := sqlx.Connect("mysql", mysqlConnURL)
+	mysqlConnURL, err := builder("mysql")
+	if err != nil {
+		return nil, fmt.Errorf("error building connection URL: %w", err)
+	}
+
+	db, err := sqlxConnect("mysql", mysqlConnURL)
 	if err != nil {
 		return nil, fmt.Errorf("error, not connected to database, %w", err)
 	}
