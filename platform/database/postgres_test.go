@@ -11,16 +11,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// helper to create a mocked *sqlx.DB
 func newMockDB(t *testing.T) (*sqlx.DB, sqlmock.Sqlmock, error) {
 	db, mock, err := sqlmock.New(sqlmock.MonitorPingsOption(true))
 	if err != nil {
 		return nil, nil, err
 	}
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-	}
-
 	return sqlx.NewDb(db, "pgx"), mock, nil
 }
 
@@ -46,7 +41,17 @@ func TestPostgreSQLConnection_FullCoverage(t *testing.T) {
 		assert.Error(t, err)
 	})
 
-	// 2️⃣ Connection error → sqlx.Connect fails
+	// 2️⃣ Custom builder function returns error
+	t.Run("custom builder error", func(t *testing.T) {
+		builder := func(dbType string) (string, error) {
+			return "", errors.New("builder fail")
+		}
+		_, err := PostgreSQLConnection(builder)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "error building connection URL")
+	})
+
+	// 3️⃣ Connection error → sqlx.Connect fails
 	t.Run("connection error", func(t *testing.T) {
 		origConnect := sqlxConnectFunc
 		defer func() { sqlxConnectFunc = origConnect }()
@@ -59,7 +64,7 @@ func TestPostgreSQLConnection_FullCoverage(t *testing.T) {
 		assert.Contains(t, err.Error(), "not connected to database")
 	})
 
-	// 3️⃣ Ping error after connect
+	// 4️⃣ Ping error after connect
 	t.Run("ping error", func(t *testing.T) {
 		origConnect := sqlxConnectFunc
 		defer func() { sqlxConnectFunc = origConnect }()
@@ -76,7 +81,7 @@ func TestPostgreSQLConnection_FullCoverage(t *testing.T) {
 		assert.Contains(t, err.Error(), "not sent ping to database")
 	})
 
-	// 4️⃣ Successful connection
+	// 5️⃣ Successful connection
 	t.Run("successful connection", func(t *testing.T) {
 		origConnect := sqlxConnectFunc
 		defer func() { sqlxConnectFunc = origConnect }()

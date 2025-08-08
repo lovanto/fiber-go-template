@@ -15,14 +15,19 @@ import (
 // Allow sqlx.Connect to be overridden in tests
 var sqlxConnectFunc = sqlx.Connect
 
-func PostgreSQLConnection() (*sqlx.DB, error) {
+func PostgreSQLConnection(builders ...func(string) (string, error)) (*sqlx.DB, error) {
 	maxConn, _ := strconv.Atoi(os.Getenv("DB_MAX_CONNECTIONS"))
 	maxIdleConn, _ := strconv.Atoi(os.Getenv("DB_MAX_IDLE_CONNECTIONS"))
 	maxLifetimeConn, _ := strconv.Atoi(os.Getenv("DB_MAX_LIFETIME_CONNECTIONS"))
 
-	postgresConnURL, err := connection_url_builder.ConnectionURLBuilder("postgres")
+	var builder func(string) (string, error) = connection_url_builder.ConnectionURLBuilder
+	if len(builders) > 0 && builders[0] != nil {
+		builder = builders[0]
+	}
+
+	postgresConnURL, err := builder("postgres")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error building connection URL: %w", err)
 	}
 
 	db, err := sqlxConnectFunc("pgx", postgresConnURL)

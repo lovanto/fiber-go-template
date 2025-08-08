@@ -21,6 +21,10 @@ test: clean critic security lint
 	go test -timeout 30s -coverprofile=cover.out ./... -coverpkg=./... -cover
 	go tool cover -func=cover.out
 
+test_dev: clean critic security lint
+	go test ./... -coverprofile=coverage.out
+	go tool cover -html=coverage.out
+
 build: test
 	CGO_ENABLED=0 go build -ldflags="-w -s" -o $(BUILD_DIR)/$(APP_NAME) main.go
 

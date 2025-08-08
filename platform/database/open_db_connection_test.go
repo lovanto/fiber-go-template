@@ -35,7 +35,7 @@ func TestOpenDBConnection_UnsupportedDB(t *testing.T) {
 	// Test PostgreSQL connection
 	t.Run("PostgreSQL connection success", func(t *testing.T) {
 		// Mock the PostgreSQL connection function
-		postgreSQLConn = func() (*sqlx.DB, error) {
+		postgreSQLConn = func(builders ...func(string) (string, error)) (*sqlx.DB, error) {
 			return mockDBConn, nil
 		}
 		os.Setenv("DB_TYPE", "pgx")
@@ -48,7 +48,7 @@ func TestOpenDBConnection_UnsupportedDB(t *testing.T) {
 	t.Run("PostgreSQL connection error", func(t *testing.T) {
 		// Mock the PostgreSQL connection function to return an error
 		expectedErr := fmt.Errorf("connection failed")
-		postgreSQLConn = func() (*sqlx.DB, error) {
+		postgreSQLConn = func(builders ...func(string) (string, error)) (*sqlx.DB, error) {
 			return nil, expectedErr
 		}
 		os.Setenv("DB_TYPE", "pgx")
