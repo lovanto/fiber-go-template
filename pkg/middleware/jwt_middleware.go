@@ -1,7 +1,9 @@
 package middleware
 
 import (
+	"log"
 	"os"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 
@@ -19,7 +21,8 @@ func JWTProtected() func(*fiber.Ctx) error {
 }
 
 func jwtError(c *fiber.Ctx, err error) error {
-	if err.Error() == "Missing or malformed JWT" {
+	log.Println(err)
+	if strings.Contains(err.Error(), "missing or malformed JWT") {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": true,
 			"msg":   err.Error(),

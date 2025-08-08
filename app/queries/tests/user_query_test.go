@@ -2,6 +2,7 @@ package queries_test
 
 import (
 	"database/sql"
+	"encoding/json"
 	"regexp"
 	"testing"
 	"time"
@@ -135,4 +136,19 @@ func TestCreateUser(t *testing.T) {
 
 	err = q.CreateUser(user)
 	assert.Error(t, err)
+}
+
+func TestBookAttrs_Scan_Success(t *testing.T) {
+	original := models.BookAttrs{
+		Picture:     "image.png",
+		Description: "description text",
+		Rating:      5,
+	}
+
+	data, _ := json.Marshal(original)
+
+	var scanned models.BookAttrs
+	err := scanned.Scan(data)
+	assert.NoError(t, err)
+	assert.Equal(t, original, scanned)
 }
