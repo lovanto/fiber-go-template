@@ -26,7 +26,7 @@ func (q *BookQueries) GetBooksByAuthor(author string) ([]models.Book, error) {
 	books := []models.Book{}
 	query := `SELECT * FROM books WHERE author = $1`
 
-	err := q.Get(&books, query, author)
+	err := q.Select(&books, query, author)
 	if err != nil {
 		return books, err
 	}
