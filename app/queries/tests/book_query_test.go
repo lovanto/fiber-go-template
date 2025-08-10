@@ -35,6 +35,7 @@ func TestBookQueries_GetBooks(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, books, 1)
 
+	// error case
 	mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM books`)).
 		WillReturnError(errors.New("db error"))
 	_, err = q.GetBooks()
@@ -55,6 +56,7 @@ func TestBookQueries_GetBooksByAuthor(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, books, 1)
 
+	// error case
 	mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM books WHERE author = $1`)).
 		WithArgs("Author1").
 		WillReturnError(errors.New("db error"))
@@ -77,6 +79,7 @@ func TestBookQueries_GetBook(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, id, book.ID)
 
+	// error case
 	mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM books WHERE id = $1`)).
 		WithArgs(id).
 		WillReturnError(errors.New("db error"))

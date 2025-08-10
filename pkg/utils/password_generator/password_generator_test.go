@@ -11,13 +11,11 @@ import (
 )
 
 func TestPasswordGenerationAndComparison(t *testing.T) {
-	// edge: empty password
 	hashed := GeneratePassword("")
 	if hashed == "" {
 		t.Fatalf("hashed password should not be empty for empty input")
 	}
 
-	// edge: invalid bcrypt cost (simulate by passing a very large password)
 	longPwd := make([]byte, 10000)
 	for i := range longPwd {
 		longPwd[i] = 'a'
@@ -54,14 +52,12 @@ func TestWrapperResponses(t *testing.T) {
 		return wrapper.ErrorResponse(c, fiber.StatusBadRequest, "oops", fiber.NewError(fiber.StatusBadRequest, "detail"))
 	})
 
-	// success path
 	req := httptest.NewRequest("GET", "/ok", http.NoBody)
 	resp, _ := app.Test(req, -1)
 	if resp.StatusCode != fiber.StatusOK {
 		t.Fatalf("expected 200, got %d", resp.StatusCode)
 	}
 
-	// error path
 	req2 := httptest.NewRequest("GET", "/err", http.NoBody)
 	resp2, _ := app.Test(req2, -1)
 	if resp2.StatusCode != fiber.StatusBadRequest {

@@ -71,9 +71,8 @@ func TestParseRefreshToken_InvalidNumeric(t *testing.T) {
 }
 
 func TestGenerateNewTokens_MissingSecret(t *testing.T) {
-	// unset secret to trigger error path
 	_ = os.Unsetenv("JWT_SECRET_KEY")
-	setDefaultEnv() // sets other vars but overridden secret removed
+	setDefaultEnv()
 	_ = os.Unsetenv("JWT_SECRET_KEY")
 
 	_, err := GenerateNewTokens("id", nil)
@@ -82,7 +81,6 @@ func TestGenerateNewTokens_MissingSecret(t *testing.T) {
 
 func TestGenerateNewTokens_SignError(t *testing.T) {
 	setDefaultEnv()
-	// override signTokenFunc to force error
 	orig := signTokenFunc
 	signTokenFunc = func(token *gojwt.Token, secret []byte) (string, error) {
 		return "", errors.New("sign error")
@@ -95,7 +93,6 @@ func TestGenerateNewTokens_SignError(t *testing.T) {
 
 func TestGenerateNewRefreshToken_HashError(t *testing.T) {
 	setDefaultEnv()
-	// override hash error
 	orig := hashWriteFunc
 	hashWriteFunc = func(h hash.Hash, data []byte) (int, error) {
 		return 0, errors.New("hash error")
@@ -148,7 +145,6 @@ func TestExtractTokenMetadata_InvalidToken(t *testing.T) {
 
 func TestExtractTokenMetadata_ExpiredToken(t *testing.T) {
 	setDefaultEnv()
-	// create expired token
 	claims := gojwt.MapClaims{
 		"id":  "123e4567-e89b-12d3-a456-426614174000",
 		"exp": time.Now().Add(-time.Hour).Unix(),
@@ -171,7 +167,6 @@ func TestExtractTokenMetadata_ExpiredToken(t *testing.T) {
 
 func TestExtractTokenMetadata_InvalidSignature(t *testing.T) {
 	setDefaultEnv()
-	// sign token with different secret
 	claims := gojwt.MapClaims{
 		"id":  "123e4567-e89b-12d3-a456-426614174000",
 		"exp": time.Now().Add(time.Minute).Unix(),
@@ -194,7 +189,6 @@ func TestExtractTokenMetadata_InvalidSignature(t *testing.T) {
 
 func TestExtractTokenMetadata_InvalidUserID(t *testing.T) {
 	setDefaultEnv()
-	// create token with invalid uuid in id claim
 	claims := gojwt.MapClaims{
 		"id":  "invalid",
 		"exp": time.Now().Add(time.Minute).Unix(),
@@ -223,15 +217,13 @@ func TestParseRefreshToken(t *testing.T) {
 	exp, err := ParseRefreshToken(tokens.Refresh)
 	assert.NoError(t, err)
 
-	// The expiration timestamp should be within the next few hours
 	now := time.Now().Unix()
 	oneHourLater := now + int64(3600)
 	assert.Greater(t, exp, now)
-	assert.LessOrEqual(t, exp, oneHourLater+int64(3600)) // allow small buffer
+	assert.LessOrEqual(t, exp, oneHourLater+int64(3600))
 }
 
 func TestExtractTokenMetadata_FallbackBranch(t *testing.T) {
-	// Save and restore original func
 	orig := verifyTokenFunc
 	verifyTokenFunc = func(c *fiber.Ctx) (*gojwt.Token, error) {
 		return &gojwt.Token{Valid: false, Claims: gojwt.MapClaims{}}, nil
@@ -249,7 +241,6 @@ func TestExtractTokenMetadata_FallbackBranch(t *testing.T) {
 	req := httptest.NewRequest("GET", "http://localhost/", http.NoBody)
 	_, e := app.Test(req)
 	assert.NoError(t, e)
-	// Function should return nil metadata and nil error (fallback branch reached)
 	assert.Nil(t, meta)
 	assert.Nil(t, err)
 }

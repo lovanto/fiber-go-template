@@ -18,7 +18,6 @@ func TestBookAttrs_Value(t *testing.T) {
 	val, err := attrs.Value()
 	assert.NoError(t, err)
 
-	// Ensure the returned value is a valid JSON representation
 	bytes, ok := val.([]byte)
 	assert.True(t, ok)
 
@@ -52,7 +51,7 @@ func TestBookAttrs_Scan_InvalidType(t *testing.T) {
 
 func TestBookAttrs_Scan_InvalidJSON(t *testing.T) {
 	var scanned models.BookAttrs
-	invalidJSON := []byte(`{"picture": "x", "rating": "not-a-number"}`) // rating should be int
+	invalidJSON := []byte(`{"picture": "x", "rating": "not-a-number"}`)
 	err := scanned.Scan(invalidJSON)
 	assert.Error(t, err)
 }

@@ -17,14 +17,12 @@ func TestNewValidator_UUIDValidation(t *testing.T) {
 	}
 	var s S
 
-	// Valid UUID
 	s.ID = uuid.New().String()
 	err := v.Struct(s)
 	if err != nil {
 		t.Fatalf("expected no error for valid uuid, got: %v", err)
 	}
 
-	// Invalid UUID
 	s.ID = "not-a-uuid"
 	err = v.Struct(s)
 	if err == nil {
@@ -42,12 +40,10 @@ func TestValidatorErrors(t *testing.T) {
 		t.Errorf("expected empty string for empty ValidationErrors, got %q", msg)
 	}
 
-	// Not a validator.ValidationErrors
 	if msg := ValidatorErrors(assertAnError{}); msg != "" {
 		t.Errorf("expected empty string for non-validation error, got %q", msg)
 	}
 
-	// Real ValidationErrors (simulate)
 	errs := validator.ValidationErrors{fakeErr{"Foo", "required"}, fakeErr{"Bar", "uuid"}}
 	msg := ValidatorErrors(errs)
 	if msg != "Foo: required\nBar: uuid" {

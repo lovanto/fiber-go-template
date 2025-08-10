@@ -24,70 +24,68 @@ func fakeBuilderError(driver string) (string, error) {
 	return "", errors.New("builder error")
 }
 
-func TestMysqlConnection_FullCoverage(t *testing.T) {
-	t.Run("success", func(t *testing.T) {
-		setEnvVarsMySQL()
-		dbMock, mock, _ := sqlmock.New(sqlmock.MonitorPingsOption(true))
-		mock.ExpectPing()
+func TestMysqlConnection_Success(t *testing.T) {
+	setEnvVarsMySQL()
+	dbMock, mock, _ := sqlmock.New(sqlmock.MonitorPingsOption(true))
+	mock.ExpectPing()
 
-		sqlxConnect = func(driverName, dataSourceName string) (*sqlx.DB, error) {
-			return sqlx.NewDb(dbMock, driverName), nil
-		}
-		defer func() { sqlxConnect = sqlx.Connect }()
+	sqlxConnect = func(driverName, dataSourceName string) (*sqlx.DB, error) {
+		return sqlx.NewDb(dbMock, driverName), nil
+	}
+	defer func() { sqlxConnect = sqlx.Connect }()
 
-		db, err := MysqlConnection(fakeBuilderSuccess)
-		assert.NoError(t, err)
-		assert.NotNil(t, db)
-		assert.NoError(t, mock.ExpectationsWereMet())
-	})
+	db, err := MysqlConnection(fakeBuilderSuccess)
+	assert.NoError(t, err)
+	assert.NotNil(t, db)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
 
-	t.Run("success custom builder", func(t *testing.T) {
-		setEnvVarsMySQL()
-		dbMock, mock, _ := sqlmock.New(sqlmock.MonitorPingsOption(true))
-		mock.ExpectPing()
+func TestMysqlConnection_SuccessCustomBuilder(t *testing.T) {
+	setEnvVarsMySQL()
+	dbMock, mock, _ := sqlmock.New(sqlmock.MonitorPingsOption(true))
+	mock.ExpectPing()
 
-		sqlxConnect = func(driverName, dataSourceName string) (*sqlx.DB, error) {
-			return sqlx.NewDb(dbMock, driverName), nil
-		}
-		defer func() { sqlxConnect = sqlx.Connect }()
+	sqlxConnect = func(driverName, dataSourceName string) (*sqlx.DB, error) {
+		return sqlx.NewDb(dbMock, driverName), nil
+	}
+	defer func() { sqlxConnect = sqlx.Connect }()
 
-		db, err := MysqlConnection(fakeBuilderSuccess)
-		assert.NoError(t, err)
-		assert.NotNil(t, db)
-		assert.NoError(t, mock.ExpectationsWereMet())
-	})
+	db, err := MysqlConnection(fakeBuilderSuccess)
+	assert.NoError(t, err)
+	assert.NotNil(t, db)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
 
-	t.Run("builder error", func(t *testing.T) {
-		setEnvVarsMySQL()
-		_, err := MysqlConnection(fakeBuilderError)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "builder error")
-	})
+func TestMysqlConnection_BuilderError(t *testing.T) {
+	setEnvVarsMySQL()
+	_, err := MysqlConnection(fakeBuilderError)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "builder error")
+}
 
-	t.Run("connect error", func(t *testing.T) {
-		setEnvVarsMySQL()
-		sqlxConnect = func(driverName, dataSourceName string) (*sqlx.DB, error) {
-			return nil, errors.New("connect fail")
-		}
-		defer func() { sqlxConnect = sqlx.Connect }()
+func TestMysqlConnection_ConnectError(t *testing.T) {
+	setEnvVarsMySQL()
+	sqlxConnect = func(driverName, dataSourceName string) (*sqlx.DB, error) {
+		return nil, errors.New("connect fail")
+	}
+	defer func() { sqlxConnect = sqlx.Connect }()
 
-		_, err := MysqlConnection(fakeBuilderSuccess)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "connect fail")
-	})
+	_, err := MysqlConnection(fakeBuilderSuccess)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "connect fail")
+}
 
-	t.Run("ping error", func(t *testing.T) {
-		setEnvVarsMySQL()
-		dbMock, mock, _ := sqlmock.New(sqlmock.MonitorPingsOption(true))
-		mock.ExpectPing().WillReturnError(errors.New("ping fail"))
+func TestMysqlConnection_PingError(t *testing.T) {
+	setEnvVarsMySQL()
+	dbMock, mock, _ := sqlmock.New(sqlmock.MonitorPingsOption(true))
+	mock.ExpectPing().WillReturnError(errors.New("ping fail"))
 
-		sqlxConnect = func(driverName, dataSourceName string) (*sqlx.DB, error) {
-			return sqlx.NewDb(dbMock, driverName), nil
-		}
-		defer func() { sqlxConnect = sqlx.Connect }()
+	sqlxConnect = func(driverName, dataSourceName string) (*sqlx.DB, error) {
+		return sqlx.NewDb(dbMock, driverName), nil
+	}
+	defer func() { sqlxConnect = sqlx.Connect }()
 
-		_, err := MysqlConnection(fakeBuilderSuccess)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "ping fail")
-	})
+	_, err := MysqlConnection(fakeBuilderSuccess)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "ping fail")
 }
