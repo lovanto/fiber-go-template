@@ -19,7 +19,6 @@ func MysqlConnection(builders ...func(string) (string, error)) (*sqlx.DB, error)
 	maxIdleConn, _ := strconv.Atoi(os.Getenv("DB_MAX_IDLE_CONNECTIONS"))
 	maxLifetimeConn, _ := strconv.Atoi(os.Getenv("DB_MAX_LIFETIME_CONNECTIONS"))
 
-	// Use the provided builder or default
 	var builder func(string) (string, error) = connection_url_builder.ConnectionURLBuilder
 	if len(builders) > 0 && builders[0] != nil {
 		builder = builders[0]

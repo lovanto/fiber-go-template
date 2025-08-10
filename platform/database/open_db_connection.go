@@ -22,7 +22,7 @@ var (
 	}
 )
 
-func OpenDBConnection() (*Queries, error) {
+var OpenDBConnection = func() (*Queries, error) {
 	var (
 		db  *sqlx.DB
 		err error

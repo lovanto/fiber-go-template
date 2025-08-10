@@ -6,16 +6,15 @@ import (
 	"github.com/create-go-app/fiber-go-template/pkg/repository"
 )
 
-func VerifyRole(role string) (string, error) {
+var VerifyRole = func(role string) (string, error) {
 	switch role {
 	case repository.AdminRoleName:
 	case repository.ModeratorRoleName:
 	case repository.UserRoleName:
-		// Nothing to do, verified successfully.
+		// Nothing to do
 	default:
 		return "", fmt.Errorf("role '%v' does not exist", role)
 	}
-
 	return role, nil
 }
 

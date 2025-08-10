@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"os"
 
+	"github.com/create-go-app/fiber-go-template/app/models"
 	gojwt "github.com/golang-jwt/jwt/v5"
 
 	"testing"
@@ -40,7 +41,7 @@ func TestExtractTokenMetadata(t *testing.T) {
 
 	app := fiber.New()
 
-	var meta *TokenMetadata
+	var meta *models.TokenMetadata
 
 	app.Get("/", func(c *fiber.Ctx) error {
 		var err error
@@ -152,7 +153,7 @@ func TestExtractTokenMetadata_ExpiredToken(t *testing.T) {
 	tokenStr, _ := gojwt.NewWithClaims(gojwt.SigningMethodHS256, claims).SignedString([]byte(os.Getenv("JWT_SECRET_KEY")))
 
 	app := fiber.New()
-	var meta *TokenMetadata
+	var meta *models.TokenMetadata
 	app.Get("/", func(c *fiber.Ctx) error {
 		meta, _ = ExtractTokenMetadata(c)
 		return nil
@@ -174,7 +175,7 @@ func TestExtractTokenMetadata_InvalidSignature(t *testing.T) {
 	tokenStr, _ := gojwt.NewWithClaims(gojwt.SigningMethodHS256, claims).SignedString([]byte("other-secret"))
 
 	app := fiber.New()
-	var meta *TokenMetadata
+	var meta *models.TokenMetadata
 	app.Get("/", func(c *fiber.Ctx) error {
 		meta, _ = ExtractTokenMetadata(c)
 		return nil
@@ -231,7 +232,7 @@ func TestExtractTokenMetadata_FallbackBranch(t *testing.T) {
 	defer func() { verifyTokenFunc = orig }()
 
 	app := fiber.New()
-	var meta *TokenMetadata
+	var meta *models.TokenMetadata
 	var err error
 	app.Get("/", func(c *fiber.Ctx) error {
 		meta, err = ExtractTokenMetadata(c)

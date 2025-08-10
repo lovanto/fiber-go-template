@@ -1,24 +1,19 @@
 package jwt
 
 import (
-    "os"
-    "strings"
+	"os"
+	"strings"
 
-    "github.com/gofiber/fiber/v2"
-    "github.com/golang-jwt/jwt/v5"
-    "github.com/google/uuid"
+	"github.com/create-go-app/fiber-go-template/app/models"
+	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 // verifyTokenFunc allows tests to stub token verification.
 var verifyTokenFunc = verifyToken
 
-type TokenMetadata struct {
-	UserID      uuid.UUID
-	Credentials map[string]bool
-	Expires     int64
-}
-
-func ExtractTokenMetadata(c *fiber.Ctx) (*TokenMetadata, error) {
+func ExtractTokenMetadata(c *fiber.Ctx) (*models.TokenMetadata, error) {
 	token, err := verifyTokenFunc(c)
 	if err != nil {
 		return nil, err
@@ -39,7 +34,7 @@ func ExtractTokenMetadata(c *fiber.Ctx) (*TokenMetadata, error) {
 			"book:delete": claims["book:delete"].(bool),
 		}
 
-		return &TokenMetadata{
+		return &models.TokenMetadata{
 			UserID:      userID,
 			Credentials: credentials,
 			Expires:     expires,

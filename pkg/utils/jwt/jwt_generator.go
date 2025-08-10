@@ -1,34 +1,30 @@
 package jwt
 
 import (
-    "crypto/sha256"
-    "encoding/hex"
-    "fmt"
-    "hash"
-    "os"
-    "strconv"
-    "strings"
-    "time"
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
+	"hash"
+	"os"
+	"strconv"
+	"strings"
+	"time"
 
-    "github.com/golang-jwt/jwt/v5"
+	"github.com/create-go-app/fiber-go-template/app/models"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // signTokenFunc is an overridable function used to sign JWTs. It allows tests to simulate signing errors.
 var signTokenFunc = func(token *jwt.Token, secret []byte) (string, error) {
-    return token.SignedString(secret)
+	return token.SignedString(secret)
 }
 
 // hashWriteFunc is an overridable function used to write data into a hash.Hash. Tests can swap it to inject errors.
 var hashWriteFunc = func(h hash.Hash, data []byte) (int, error) {
-    return h.Write(data)
+	return h.Write(data)
 }
 
-type Tokens struct {
-	Access  string
-	Refresh string
-}
-
-func GenerateNewTokens(id string, credentials []string) (*Tokens, error) {
+func GenerateNewTokens(id string, credentials []string) (*models.Tokens, error) {
 	accessToken, err := generateNewAccessToken(id, credentials)
 	if err != nil {
 		return nil, err
@@ -39,7 +35,7 @@ func GenerateNewTokens(id string, credentials []string) (*Tokens, error) {
 		return nil, err
 	}
 
-	return &Tokens{
+	return &models.Tokens{
 		Access:  accessToken,
 		Refresh: refreshToken,
 	}, nil
