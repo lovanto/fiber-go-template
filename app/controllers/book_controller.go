@@ -25,28 +25,15 @@ import (
 func GetBooks(c *fiber.Ctx) error {
 	db, err := database.OpenDBConnection()
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": true,
-			"msg":   err.Error(),
-		})
+		return wrapper.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 	}
 
 	books, err := db.GetBooks()
 	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"error": true,
-			"msg":   "books were not found",
-			"count": 0,
-			"books": nil,
-		})
+		return wrapper.ErrorResponse(c, fiber.StatusNotFound, "", errors.New(repository.NotFoundErrorMessage))
 	}
 
-	return c.JSON(fiber.Map{
-		"error": false,
-		"msg":   nil,
-		"count": len(books),
-		"books": books,
-	})
+	return wrapper.SuccessResponse(c, "", books)
 }
 
 // GetBook func gets book by given ID or 404 error.
@@ -61,34 +48,20 @@ func GetBooks(c *fiber.Ctx) error {
 func GetBook(c *fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": true,
-			"msg":   err.Error(),
-		})
+		return wrapper.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 	}
 
 	db, err := database.OpenDBConnection()
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": true,
-			"msg":   err.Error(),
-		})
+		return wrapper.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 	}
 
 	book, err := db.GetBook(id)
 	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"error": true,
-			"msg":   "book with the given ID is not found",
-			"book":  nil,
-		})
+		return wrapper.ErrorResponse(c, fiber.StatusNotFound, "", errors.New(repository.NotFoundErrorMessage))
 	}
 
-	return c.JSON(fiber.Map{
-		"error": false,
-		"msg":   nil,
-		"book":  book,
-	})
+	return wrapper.SuccessResponse(c, "", book)
 }
 
 // CreateBook func for creates a new book.

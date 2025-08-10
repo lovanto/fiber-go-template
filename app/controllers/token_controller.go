@@ -2,11 +2,14 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/create-go-app/fiber-go-template/app/models"
+	"github.com/create-go-app/fiber-go-template/pkg/repository"
 	"github.com/create-go-app/fiber-go-template/pkg/utils/jwt"
 	"github.com/create-go-app/fiber-go-template/pkg/utils/roles_credentials"
+	"github.com/create-go-app/fiber-go-template/pkg/utils/wrapper"
 	"github.com/create-go-app/fiber-go-template/platform/cache"
 	"github.com/create-go-app/fiber-go-template/platform/database"
 
@@ -28,98 +31,61 @@ func RenewTokens(c *fiber.Ctx) error {
 
 	claims, err := jwt.ExtractTokenMetadata(c)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": true,
-			"msg":   err.Error(),
-		})
+		return wrapper.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 	}
 
 	expiresAccessToken := claims.Expires
 	if now > expiresAccessToken {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": true,
-			"msg":   "unauthorized, check expiration time of your token",
-		})
+		return wrapper.ErrorResponse(c, fiber.StatusUnauthorized, "", errors.New(repository.UnauthorizedErrorMessage))
 	}
 
 	renew := &models.Renew{}
 	if err := c.BodyParser(renew); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": true,
-			"msg":   err.Error(),
-		})
+		return wrapper.ErrorResponse(c, fiber.StatusBadRequest, "", err)
 	}
 
 	expiresRefreshToken, err := jwt.ParseRefreshToken(renew.RefreshToken)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": true,
-			"msg":   err.Error(),
-		})
+		return wrapper.ErrorResponse(c, fiber.StatusBadRequest, "", err)
 	}
 
 	if now < expiresRefreshToken {
 		userID := claims.UserID
 		db, err := database.OpenDBConnection()
 		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": true,
-				"msg":   err.Error(),
-			})
+			return wrapper.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 		}
 
 		foundedUser, err := db.GetUserByID(userID)
 		if err != nil {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-				"error": true,
-				"msg":   "user with the given ID is not found",
-			})
+			return wrapper.ErrorResponse(c, fiber.StatusNotFound, "", errors.New(repository.NotFoundErrorMessage))
 		}
 
 		credentials, err := roles_credentials.GetCredentialsByRole(foundedUser.UserRole)
 		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"error": true,
-				"msg":   err.Error(),
-			})
+			return wrapper.ErrorResponse(c, fiber.StatusBadRequest, "", err)
 		}
 
 		tokens, err := jwt.GenerateNewTokens(userID.String(), credentials)
 		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": true,
-				"msg":   err.Error(),
-			})
+			return wrapper.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 		}
 
 		connRedis, err := cache.RedisConnection()
 		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": true,
-				"msg":   err.Error(),
-			})
+			return wrapper.ErrorResponse(c, fiber.StatusInternalServerError, "", err)
 		}
 
 		errRedis := connRedis.Set(context.Background(), userID.String(), tokens.Refresh, 0).Err()
 		if errRedis != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": true,
-				"msg":   errRedis.Error(),
-			})
+			return wrapper.ErrorResponse(c, fiber.StatusInternalServerError, "", errRedis)
 		}
 
-		return c.JSON(fiber.Map{
-			"error": false,
-			"msg":   nil,
-			"tokens": fiber.Map{
-				"access":  tokens.Access,
-				"refresh": tokens.Refresh,
-			},
+		return wrapper.SuccessResponse(c, "", models.TokenResponse{
+			Access:  tokens.Access,
+			Refresh: tokens.Refresh,
 		})
 	} else {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": true,
-			"msg":   "unauthorized, your session was ended earlier",
-		})
+		return wrapper.ErrorResponse(c, fiber.StatusUnauthorized, "", errors.New(repository.UnauthorizedErrorMessage))
 	}
 }
